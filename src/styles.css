@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 98%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary:  202 80.3% 23.9%;
+    --primary-light: 198 93% 60%;
+    --primary-middle: 201 96% 32%;
+    --primary-dark: 202 80% 24%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 240 5.9% 90%;
+    --border-light: 240 5.9% 95%;
+    --border-medium: 240 5.9% 85%;
+    --border-dark: 240 5.9% 75%;
+    --input: 240 5.9% 90%;
+    --ring: 202 80.3% 23.9%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    font-family:Arial, Helvetica, sans-serif;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 5.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 204 80.2% 15.9%;
+    --primary-light: 198 93% 60%;
+    --primary-middle: 201 96% 32%;
+    --primary-dark: 202 80% 24%;
+    --primary-foreground: 204 93.8% 93.7%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 240 3.7% 20%;
+    --border-light: 240 3.7% 26%;
+    --border-medium: 240 3.7% 16%;
+    --border-dark: 240 3.7% 12%;
+    --input: 240 3.7% 15.9%;
+    --ring: 211.7 96.4% 78.4%;
+  }
+}
+
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+abbr{
+  text-decoration: none;
+}
+
+/* Mobile touch optimization */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea,
+  button {
+    min-height: 44px;
+  }
+  
+  a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
