@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Bell, Monitor, Users, Shield, AlertCircle, Globe, Database, Download, Upload, Loader, CheckCircle } from 'lucide-react';
+import { Save, Bell, Monitor, Users, Shield, AlertCircle, Globe, Database, Download, Upload, Loader, CheckCircle, LogOut } from 'lucide-react';
 import { getPermissions } from '../lib/permissions';
 import { auditService } from '../lib/services/auditService';
 import { useTranslation, Language } from '../lib/translations';
@@ -8,9 +8,10 @@ import { settingsManager, AppSettings } from '../lib/settingsManager';
 
 interface SettingsProps {
   userRole: 'doctor' | 'staff';
+  onLogout?: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ userRole }) => {
+const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
   const permissions = getPermissions(userRole);
   const { language, setLanguage, t } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState<Language>(language);
@@ -279,7 +280,7 @@ const Settings: React.FC<SettingsProps> = ({ userRole }) => {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="text-center flex-1">
           <h1 className="text-3xl font-bold text-foreground">{t.settingsTitle}</h1>
           <p className="text-muted-foreground">{t.settingsDescription}</p>
         </div>
@@ -314,24 +315,74 @@ const Settings: React.FC<SettingsProps> = ({ userRole }) => {
       </div>
 
       {!permissions.canConfigureSystem && (
-        <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6">
-          <div className="flex items-start gap-4">
-            <AlertCircle className="w-6 h-6 text-yellow-600 mt-1 flex-shrink-0" />
-            <div>
-              <h3 className="text-lg font-semibold text-yellow-900 mb-2">Restricted Access</h3>
-              <p className="text-sm text-yellow-800 mb-3">
-                System settings and configuration are only accessible to doctors and administrators. This includes:
-              </p>
-              <ul className="list-disc list-inside text-sm text-yellow-800 space-y-1 mb-3">
-                <li>Queue management rules and priority settings</li>
-                <li>System backup and data retention policies</li>
-                <li>Display and notification preferences</li>
-                <li>Audit logging and security settings</li>
-              </ul>
-              <p className="text-sm text-yellow-800">
-                If you need to change your personal settings or password, please contact your system administrator.
+        <div className="space-y-6">
+          {/* Staff Language Settings */}
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Globe className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-semibold text-foreground">{t.language}</h3>
+            </div>
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleLanguageChange('en')}
+                  className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                    currentLanguage === 'en'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  {t.english}
+                </button>
+                <button
+                  onClick={() => handleLanguageChange('tl')}
+                  className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                    currentLanguage === 'tl'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  {t.tagalog}
+                </button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Select your preferred language for the interface. Changes will take effect after page reload.
               </p>
             </div>
+          </div>
+
+          {/* Info Box */}
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+            <div className="flex items-start gap-4">
+              <AlertCircle className="w-6 h-6 text-blue-600 mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="text-lg font-semibold text-blue-900 mb-2">Staff Settings</h3>
+                <p className="text-sm text-blue-800 mb-3">
+                  As a staff member, you can change your language preference here.
+                </p>
+                <p className="text-sm text-blue-800">
+                  Advanced system settings are only accessible to doctors and administrators. If you need assistance, please contact your supervisor.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Logout Section - Staff */}
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <LogOut className="w-5 h-5 text-destructive" />
+              <h3 className="text-lg font-semibold text-foreground">Logout</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Sign out of your account. You will need to log in again to access the system.
+            </p>
+            <button
+              onClick={onLogout}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors font-medium"
+            >
+              <LogOut className="w-5 h-5" />
+              {t.logout}
+            </button>
           </div>
         </div>
       )}
@@ -701,6 +752,24 @@ const Settings: React.FC<SettingsProps> = ({ userRole }) => {
               Always test restored backups to ensure data integrity.
             </p>
           </div>
+        </div>
+
+        {/* Logout Section - Doctor */}
+        <div className="bg-card border border-border rounded-lg p-6 lg:col-span-2">
+          <div className="flex items-center gap-3 mb-4">
+            <LogOut className="w-5 h-5 text-destructive" />
+            <h3 className="text-lg font-semibold text-foreground">Logout</h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Sign out of your account. You will need to log in again to access the system.
+          </p>
+          <button
+            onClick={onLogout}
+            className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors font-medium"
+          >
+            <LogOut className="w-5 h-5" />
+            {t.logout}
+          </button>
         </div>
       </div>
       )}

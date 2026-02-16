@@ -25,6 +25,7 @@ export const patientService = {
             blood_type: patient.bloodType,
             last_visit: patient.lastVisit || null,
             risk_level: patient.riskLevel || 'Low',
+            profile_picture: patient.profilePicture || null,
             created_at: new Date().toISOString()
           }
         ])
@@ -87,6 +88,7 @@ export const patientService = {
       if (patient.bloodType) updateData.blood_type = patient.bloodType;
       if (patient.lastVisit) updateData.last_visit = patient.lastVisit;
       if (patient.riskLevel) updateData.risk_level = patient.riskLevel;
+      if (patient.profilePicture !== undefined) updateData.profile_picture = patient.profilePicture;
 
       const { data, error } = await supabase
         .from('patients')

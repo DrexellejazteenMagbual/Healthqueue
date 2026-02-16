@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS patients (
   blood_type VARCHAR(10),
   last_visit TIMESTAMP,
   risk_level VARCHAR(50) DEFAULT 'Low',
+  profile_picture TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -68,6 +69,7 @@ CREATE TABLE IF NOT EXISTS illness_tracking (
 -- ============================================
 CREATE INDEX IF NOT EXISTS idx_patients_email ON patients(email);
 CREATE INDEX IF NOT EXISTS idx_patients_phone ON patients(phone);
+CREATE INDEX IF NOT EXISTS idx_patients_has_picture ON patients(profile_picture) WHERE profile_picture IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_queue_patient_id ON queue(patient_id);
 CREATE INDEX IF NOT EXISTS idx_queue_status ON queue(status);
 CREATE INDEX IF NOT EXISTS idx_analytics_date ON analytics(date);

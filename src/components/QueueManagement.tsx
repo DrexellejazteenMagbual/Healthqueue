@@ -149,7 +149,7 @@ const QueueManagement: React.FC<QueueManagementProps> = ({
 
   return (
     <div className="p-6 space-y-6">
-      <div>
+      <div className="text-center">
         <h1 className="text-3xl font-bold text-foreground">{t.queueManagement}</h1>
         <p className="text-muted-foreground">Manage patient queue and service status</p> <hr />
       </div>

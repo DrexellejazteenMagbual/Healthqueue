@@ -205,7 +205,7 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ userRole }) => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-start">
-        <div>
+        <div className="text-center flex-1">
           <h1 className="text-3xl font-bold text-foreground">{t.staffManagement}</h1>
           <p className="text-muted-foreground mt-1">{t.staffManagementDescription}</p>
         </div>

@@ -328,7 +328,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ analyticsData: initialData, userR
 
   return (
     <div className="p-6 space-y-6">
-      <div>
+      <div className="text-center">
         <h1 className="text-3xl font-bold text-foreground">Analytics Dashboard</h1>
         <p className="text-muted-foreground">Health office statistics and insights</p>
       </div>
@@ -353,28 +353,25 @@ const Analytics: React.FC<AnalyticsProps> = ({ analyticsData: initialData, userR
               title="Daily Visits"
               value={analyticsData.dailyVisits.toString()}
               icon={Users}
-              trend={`${analyticsData.dailyTrend >= 0 ? '+' : ''}${analyticsData.dailyTrend}% from yesterday`}
               color="primary"
             />
             <StatCard
               title="Weekly Visits"
               value={analyticsData.weeklyVisits.toString()}
               icon={Calendar}
-              trend={`${analyticsData.weeklyTrend >= 0 ? '+' : ''}${analyticsData.weeklyTrend}% from last week`}
-              color="secondary"
+             color="secondary"
             />
             <StatCard
               title="Monthly Visits"
               value={analyticsData.monthlyVisits.toString()}
               icon={TrendingUp}
-              trend={`${analyticsData.monthlyTrend >= 0 ? '+' : ''}${analyticsData.monthlyTrend}% from last month`}
               color="accent"
             />
             <StatCard
               title="Avg. Daily"
               value={Math.round(analyticsData.monthlyVisits / 30).toString()}
               icon={Activity}
-              trend="Based on monthly data"
+       
               color="primary"
             />
           </div>

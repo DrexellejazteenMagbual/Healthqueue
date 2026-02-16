@@ -15,6 +15,7 @@ export interface Patient {
   createdAt: string;
   lastVisit?: string;
   riskLevel?: 'Low' | 'Medium' | 'High';
+  profilePicture?: string;
 }
 
 export interface QueueItem {

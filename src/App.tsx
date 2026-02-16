@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import PatientProfiles from './components/PatientProfiles';
@@ -11,7 +10,6 @@ import QueueDisplay from './components/QueueDisplay';
 import SetupPage from './components/SetupPage';
 import Login from './components/Login';
 import FileManagement from './components/FileManagement';
-import AuditLogs from './components/AuditLogs';
 import StaffManagement from './components/StaffManagement';
 import { Patient, QueueItem, AnalyticsData } from './types';
 import { patientService } from './lib/services/patientService';
@@ -28,7 +26,6 @@ const App: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [currentNumber, setCurrentNumber] = useState(1);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
     dailyVisits: 0,
     weeklyVisits: 0,
@@ -113,7 +110,8 @@ const App: React.FC = () => {
           bloodType: p.blood_type,
           createdAt: p.created_at,
           lastVisit: p.last_visit,
-          riskLevel: p.risk_level
+          riskLevel: p.risk_level,
+          profilePicture: p.profile_picture
         }));
         setPatients(mappedPatients);
       }
@@ -202,7 +200,8 @@ const App: React.FC = () => {
           bloodType: p.blood_type,
           createdAt: p.created_at,
           lastVisit: p.last_visit,
-          riskLevel: p.risk_level
+          riskLevel: p.risk_level,
+          profilePicture: p.profile_picture
         }));
         setPatients(mappedPatients);
       }
@@ -273,12 +272,66 @@ const App: React.FC = () => {
   };
 
   const updatePatient = async (id: string, updates: Partial<Patient>) => {
+    const patient = patients.find(p => p.id === id);
     const { error } = await patientService.updatePatient(id, updates);
     
     if (error) {
       console.error('Error updating patient:', error);
+      notificationService.notify({
+        message: 'Failed to update patient. Please try again.',
+        type: 'error',
+        duration: 4000
+      });
     } else {
       setPatients(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+      if (patient) {
+        notificationService.notify({
+          message: `Patient ${patient.firstName} ${patient.lastName} has been updated.`,
+          type: 'success',
+          duration: 3000
+        });
+      }
+    }
+  };
+
+  const deletePatient = async (id: string) => {
+    const patient = patients.find(p => p.id === id);
+    if (!patient) return;
+
+    const { error } = await patientService.deletePatient(id);
+    
+    if (error) {
+      console.error('Error deleting patient:', error);
+      notificationService.notify({
+        message: 'Failed to delete patient. Please try again.',
+        type: 'error',
+        duration: 4000
+      });
+    } else {
+      setPatients(prev => prev.filter(p => p.id !== id));
+      notificationService.notify({
+        message: `Patient ${patient.firstName} ${patient.lastName} has been deleted.`,
+        type: 'success',
+        duration: 3000
+      });
+      
+      // Log patient deletion
+      const userEmail = localStorage.getItem('userEmail') || 'unknown@clinic.com';
+      const currentRole = userRole || 'doctor';
+      await auditService.logDataModification(
+        userEmail,
+        currentRole,
+        'patient',
+        id,
+        'delete',
+        {
+          before: {
+            firstName: patient.firstName,
+            lastName: patient.lastName,
+            id: patient.id
+          }
+        }
+      );
     }
   };
 
@@ -371,46 +424,13 @@ const App: React.FC = () => {
       </Routes>
 
       {/* Main App Routes */}
-      <div className="flex flex-col md:flex-row h-screen bg-background">
-        {/* Mobile Header */}
-        <div className="md:hidden bg-card border-b border-border p-4 flex items-center justify-between z-50">
-          <div className="flex items-center gap-3">
-            <img 
-              src="/mho-logo.png" 
-              alt="MHO Logo" 
-              className="w-8 h-8 object-contain"
-            />
-            <h1 className="text-lg font-semibold text-foreground">HealthQueue</h1>
-          </div>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="md:hidden p-2 hover:bg-accent rounded-lg transition-colors"
-          >
-            {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-
-        {/* Mobile Overlay */}
-        {sidebarOpen && (
-          <div
-            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30 top-16"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        {/* Sidebar */}
-        <div
-          className={`fixed md:relative top-16 md:top-0 left-0 h-[calc(100vh-64px)] md:h-screen w-64 transform transition-transform duration-300 z-40 md:z-auto ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-          }`}
-        >
-          <Sidebar 
-            onNavigate={() => setSidebarOpen(false)} 
-            userRole={userRole!}
-            userName={userName}
-            onLogout={handleLogout}
-          />
-        </div>
+      <div className="flex flex-col h-screen bg-background">
+        {/* Top Navigation */}
+        <Sidebar 
+          onNavigate={() => {}} 
+          userRole={userRole!}
+          userName={userName}
+        />
 
         {/* Main Content */}
         <main className="flex-1 overflow-auto w-full">
@@ -433,6 +453,7 @@ const App: React.FC = () => {
                   patients={patients}
                   addPatient={addPatient}
                   updatePatient={updatePatient}
+                  deletePatient={deletePatient}
                   addToQueue={addToQueue}
                   userRole={userRole!}
                 />
@@ -464,11 +485,7 @@ const App: React.FC = () => {
                 />
               } 
             />
-            <Route path="/settings" element={<Settings userRole={userRole!} />} />
-            <Route 
-              path="/audit-logs" 
-              element={<AuditLogs userRole={userRole!} />} 
-            />
+            <Route path="/settings" element={<Settings userRole={userRole!} onLogout={handleLogout} />} />
             <Route 
               path="/staff" 
               element={<StaffManagement userRole={userRole!} />} 

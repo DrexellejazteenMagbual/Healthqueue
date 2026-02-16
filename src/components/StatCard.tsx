@@ -5,11 +5,10 @@ interface StatCardProps {
   title: string;
   value: string;
   icon: LucideIcon;
-  trend: string;
   color: 'primary' | 'secondary' | 'accent';
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, trend, color }) => {
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, color }) => {
   const colorClasses = {
     primary: 'bg-primary text-primary-foreground',
     secondary: 'bg-secondary text-secondary-foreground',
@@ -27,7 +26,6 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, trend, co
           <Icon className="w-5 md:w-6 h-5 md:h-6" />
         </div>
       </div>
-      <p className="text-xs text-muted-foreground mt-2">{trend}</p>
     </div>
   );
 };

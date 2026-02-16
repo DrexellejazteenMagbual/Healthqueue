@@ -20,9 +20,9 @@ const Dashboard: React.FC<DashboardProps> = ({ patients, queue, analyticsData })
 
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
-      <div>
+      <div className="text-center">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground">{t.dashboard}</h1>
-        <p className="text-sm md:text-base text-muted-foreground">Welcome to RHU Dupax Del Sur Patient Management System</p>
+        <p className="text-sm md:text-base text-muted-foreground">Welcome to the smart patient profiling and queue management system</p>
         <hr />
       </div>
 
@@ -31,28 +31,24 @@ const Dashboard: React.FC<DashboardProps> = ({ patients, queue, analyticsData })
           title={t.totalPatients}
           value={patients.length.toString()}
           icon={Users}
-          trend="+12% from last month"
           color="primary"
         />
         <StatCard
           title={t.queuedPatients}
           value={waitingCount.toString()}
           icon={Clock}
-          trend={`${priorityCount} priority cases`}
           color="secondary"
         />
         <StatCard
           title={t.serving}
           value={servingCount.toString()}
           icon={TrendingUp}
-          trend="Average wait: 15 min"
           color="accent"
         />
         <StatCard
           title={t.servedToday}
           value={analyticsData.dailyVisits.toString()}
           icon={AlertTriangle}
-          trend="+8% from yesterday"
           color="primary"
         />
       </div>

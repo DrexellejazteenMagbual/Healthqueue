@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Patient } from '../types';
-import { Search, Plus, Edit, UserPlus, ArrowUpDown, AlertCircle } from 'lucide-react';
+import { Search, Plus, Edit, UserPlus, ArrowUpDown, AlertCircle, Trash2, User, FileText, Calendar, ClipboardList, Clock, FolderOpen } from 'lucide-react';
 import PatientForm from './PatientForm';
-import PatientCard from './PatientCard';
 import { getPermissions } from '../lib/permissions';
 import { auditService } from '../lib/services/auditService';
 import { useTranslation } from '../lib/translations';
@@ -12,6 +11,7 @@ interface PatientProfilesProps {
   patients: Patient[];
   addPatient: (patient: Omit<Patient, 'id' | 'createdAt'>) => void;
   updatePatient: (id: string, updates: Partial<Patient>) => void;
+  deletePatient: (id: string) => void;
   addToQueue: (patientId: string, priority?: 'normal' | 'priority') => void;
   userRole: 'doctor' | 'staff';
 }
@@ -20,6 +20,7 @@ const PatientProfiles: React.FC<PatientProfilesProps> = ({
   patients,
   addPatient,
   updatePatient,
+  deletePatient,
   addToQueue,
   userRole
 }) => {
@@ -29,6 +30,7 @@ const PatientProfiles: React.FC<PatientProfilesProps> = ({
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [sortBy, setSortBy] = useState<'name' | 'risk-high' | 'risk-low'>('name');
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   
   const permissions = getPermissions(userRole);
 
@@ -62,8 +64,11 @@ const PatientProfiles: React.FC<PatientProfilesProps> = ({
     const userEmail = localStorage.getItem('userName') || 'unknown@clinic.com';
     
     if (editingPatient) {
-      // Log patient update
-      await auditService.logDataModification(
+      // Update patient first for faster UI response
+      await updatePatient(editingPatient.id, patientData);
+      
+      // Log patient update in background (don't wait)
+      auditService.logDataModification(
         userEmail,
         userRole,
         'patient',
@@ -76,12 +81,15 @@ const PatientProfiles: React.FC<PatientProfilesProps> = ({
             JSON.stringify(editingPatient[key as keyof Patient]) !== JSON.stringify(patientData[key as keyof Omit<Patient, 'id' | 'createdAt'>])
           )
         }
-      );
-      updatePatient(editingPatient.id, patientData);
+      ).catch(err => console.error('Audit logging failed:', err));
+      
       setEditingPatient(null);
     } else {
-      // Log patient creation
-      await auditService.logDataModification(
+      // Add patient first
+      addPatient(patientData);
+      
+      // Log patient creation in background (don't wait)
+      auditService.logDataModification(
         userEmail,
         userRole,
         'patient',
@@ -93,8 +101,7 @@ const PatientProfiles: React.FC<PatientProfilesProps> = ({
             createdBy: userEmail
           }
         }
-      );
-      addPatient(patientData);
+      ).catch(err => console.error('Audit logging failed:', err));
     }
     setShowForm(false);
   };
@@ -110,27 +117,15 @@ const PatientProfiles: React.FC<PatientProfilesProps> = ({
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{t.patientProfiles}</h1>
-          <p className="text-muted-foreground">Manage patient information and records</p>
-          <hr />
-        </div>
-        <button
-          onClick={() => {
-            setEditingPatient(null);
-            setShowForm(true);
-          }}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          {t.addPatient}
-        </button>
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-foreground">{t.patientProfiles}</h1>
+        <p className="text-muted-foreground">Manage patient information and records</p>
+        <hr />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
         {/* Search */}
-        <div className="relative md:col-span-2">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <input
             type="text"
@@ -142,7 +137,7 @@ const PatientProfiles: React.FC<PatientProfilesProps> = ({
         </div>
 
         {/* Sort By */}
-        <div className="relative">
+        <div className="relative w-full md:w-64">
           <ArrowUpDown className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <select
             value={sortBy}
@@ -154,28 +149,85 @@ const PatientProfiles: React.FC<PatientProfilesProps> = ({
             <option value="risk-low">Sort by Risk (Low First)</option>
           </select>
         </div>
+
+        <button
+          onClick={() => {
+            setEditingPatient(null);
+            setShowForm(true);
+          }}
+          className="flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap"
+        >
+          <Plus className="w-4 h-4" />
+          {t.addPatient}
+        </button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-2 gap-2 overflow-auto max-h-[70vh]">
-        {sortedPatients.map((patient) => (
-          <PatientCard
-            key={patient.id}
-            patient={patient}
-            onClick={async () => {
-              const userEmail = localStorage.getItem('userName') || 'unknown@clinic.com';
-              // Log patient data access
-              await auditService.logDataAccess(
-                userEmail,
-                userRole,
-                'patient',
-                patient.id,
-                'view',
-                true
-              );
-              setSelectedPatient(patient);
-            }}
-          />
-        ))}
+      <div className="overflow-auto max-h-[70vh]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {sortedPatients.map((patient) => {
+            const initials = `${patient.firstName.charAt(0)}${patient.lastName.charAt(0)}`.toUpperCase();
+            const age = new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear();
+            
+            return (
+              <div
+                key={patient.id}
+                className="bg-card border border-border rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={async () => {
+                  const userEmail = localStorage.getItem('userName') || 'unknown@clinic.com';
+                  await auditService.logDataAccess(
+                    userEmail,
+                    userRole,
+                    'patient',
+                    patient.id,
+                    'view',
+                    true
+                  );
+                  setSelectedPatient(patient);
+                }}
+              >
+                {/* Card content - horizontal layout */}
+                <div className="flex gap-4">
+                  {/* Profile Picture */}
+                  <div className="flex-shrink-0">
+                    <div className={`w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-4 ${
+                      patient.riskLevel === 'High' ? 'border-red-500' :
+                      patient.riskLevel === 'Medium' ? 'border-yellow-500' :
+                      patient.riskLevel === 'Low' ? 'border-green-500' :
+                      'border-border'
+                    }`}>
+                      {patient.profilePicture ? (
+                        <img 
+                          src={patient.profilePicture} 
+                          alt={`${patient.firstName} ${patient.lastName}`} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-xl font-bold text-primary">{initials}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Patient Info */}
+                  <div className="flex-1 space-y-1">
+                    <h3 className="font-semibold text-foreground text-base">
+                      {patient.firstName} {patient.lastName}
+                    </h3>
+                    
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>{age} yrs</span>
+                      <span>•</span>
+                      <span>{patient.gender}</span>
+                    </div>
+
+                    <div className="text-sm text-muted-foreground">
+                      {patient.phone}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {selectedPatient && (
@@ -188,6 +240,10 @@ const PatientProfiles: React.FC<PatientProfilesProps> = ({
             setShowForm(true);
           }}
           onAddToQueue={handleAddToQueue}
+          onDelete={() => {
+            setDeleteConfirmId(selectedPatient.id);
+            setSelectedPatient(null);
+          }}
           permissions={permissions}
         />
       )}
@@ -202,6 +258,34 @@ const PatientProfiles: React.FC<PatientProfilesProps> = ({
           }}
         />
       )}
+
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-foreground mb-4">Confirm Delete</h3>
+            <p className="text-muted-foreground mb-6">
+              Are you sure you want to delete this patient? This action cannot be undone and will permanently remove all patient records.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="px-4 py-2 bg-card border border-border text-foreground rounded-lg hover:bg-accent transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  deletePatient(deleteConfirmId);
+                  setDeleteConfirmId(null);
+                }}
+                className="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -212,123 +296,273 @@ interface PatientDetailsModalProps {
   onClose: () => void;
   onEdit: () => void;
   onAddToQueue: (patientId: string, priority: 'normal' | 'priority') => void;
+  onDelete: () => void;
   permissions: ReturnType<typeof getPermissions>;
 }
 
-const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onClose, onEdit, onAddToQueue, permissions }) => {
+const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onClose, onEdit, onAddToQueue, onDelete, permissions }) => {
   const age = new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear();
   const isPriority = age >= 60 || patient.medicalHistory.some(condition => 
     ['Hypertension', 'Diabetes', 'Heart Disease'].includes(condition)
   );
+  const [activeTab, setActiveTab] = useState<'profile' | 'general' | 'anamnesis' | 'files' | 'scheduled' | 'history' | 'treatments'>('profile');
+  const initials = `${patient.firstName.charAt(0)}${patient.lastName.charAt(0)}`.toUpperCase();
+
+  const tabs = [
+    { id: 'profile' as const, label: 'Profile', icon: User },
+    { id: 'general' as const, label: 'General Info', icon: FileText },
+    { id: 'anamnesis' as const, label: 'Anamnesis', icon: ClipboardList },
+    { id: 'files' as const, label: 'Files', icon: FolderOpen },
+    { id: 'scheduled' as const, label: 'Scheduled', icon: Calendar },
+    { id: 'history' as const, label: 'Visit History', icon: Clock },
+    { id: 'treatments' as const, label: 'Treatments', icon: Edit },
+  ];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-card border border-border rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-card border border-border rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 bg-card border-b border-border p-6 flex items-start justify-between">
+        <div className="bg-card border-b border-border p-6 flex items-start justify-between">
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-foreground">
               {patient.firstName} {patient.lastName}
             </h2>
-
+            <p className="text-sm text-muted-foreground mt-1">{age} years old • {patient.gender}</p>
           </div>
-          {patient.riskLevel && (
-            <span className={`text-sm px-3 py-1 rounded-full ${
-              patient.riskLevel === 'High' ? 'bg-destructive text-destructive-foreground' :
-              patient.riskLevel === 'Medium' ? 'bg-yellow-500 text-white' :
-              'bg-green-500 text-white'
-            }`}>
-              {patient.riskLevel} Risk
-            </span>
-          )}
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b border-border bg-muted/50">
+          <div className="flex overflow-x-auto">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                    activeTab === tab.id
+                      ? 'border-primary text-primary bg-card'
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-card/50'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Basic Information */}
-          <div>
-            <h3 className="text-lg font-semibold text-foreground mb-3">Basic Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Date of Birth</p>
-                <p className="text-foreground">{new Date(patient.dateOfBirth).toLocaleDateString()}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Blood Type</p>
-                <p className="text-foreground">{patient.bloodType}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Phone</p>
-                <p className="text-foreground">{patient.phone}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Email</p>
-                <p className="text-foreground">{patient.email}</p>
-              </div>
-              <div className="md:col-span-2">
-                <p className="text-sm text-muted-foreground">Address</p>
-                <p className="text-foreground">{patient.address}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Emergency Contact</p>
-                <p className="text-foreground">{patient.emergencyContact}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Last Visit</p>
-                <p className="text-foreground">
-                  {patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'Never'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Medical History */}
-          {patient.medicalHistory.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-3">Medical History</h3>
-              {permissions.canViewAllPatientDetails ? (
-                <div className="flex flex-wrap gap-2">
-                  {patient.medicalHistory.map((condition, index) => (
-                    <span
-                      key={index}
-                      className="bg-muted text-muted-foreground px-3 py-1 rounded-full text-sm"
-                    >
-                      {condition}
-                    </span>
-                  ))}
+        <div className="flex-1 overflow-y-auto p-6">
+          {/* Profile Tab */}
+          {activeTab === 'profile' && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-6">
+                <div className={`w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-4 ${
+                  patient.riskLevel === 'High' ? 'border-red-500' :
+                  patient.riskLevel === 'Medium' ? 'border-yellow-500' :
+                  patient.riskLevel === 'Low' ? 'border-green-500' :
+                  'border-border'
+                }`}>
+                  {patient.profilePicture ? (
+                    <img 
+                      src={patient.profilePicture} 
+                      alt={`${patient.firstName} ${patient.lastName}`} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-3xl font-bold text-primary">{initials}</span>
+                  )}
                 </div>
-              ) : (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-yellow-800">Restricted Access</p>
-                    <p className="text-sm text-yellow-700 mt-1">Full medical history is only accessible to doctors for patient privacy.</p>
-                  </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-foreground">{patient.firstName} {patient.lastName}</h3>
+                  <p className="text-muted-foreground">{patient.email}</p>
+                  <p className="text-muted-foreground">{patient.phone}</p>
                 </div>
-              )}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Blood Type</p>
+                  <p className="text-lg font-semibold text-foreground">{patient.bloodType}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Date of Birth</p>
+                  <p className="text-lg font-semibold text-foreground">{new Date(patient.dateOfBirth).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Last Visit</p>
+                  <p className="text-lg font-semibold text-foreground">
+                    {patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'Never'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Risk Level</p>
+                  <p className="text-lg font-semibold text-foreground">{patient.riskLevel || 'Low'}</p>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Allergies */}
-          {patient.allergies.length > 0 && (
+          {/* General Information Tab */}
+          {activeTab === 'general' && (
             <div>
-              <h3 className="text-lg font-semibold text-foreground mb-3">Allergies</h3>
-              <div className="flex flex-wrap gap-2">
-                {patient.allergies.map((allergy, index) => (
-                  <span
-                    key={index}
-                    className="bg-destructive/10 text-destructive px-3 py-1 rounded-full text-sm font-medium"
-                  >
-                    {allergy}
-                  </span>
-                ))}
+              <h3 className="text-lg font-semibold text-foreground mb-3">General Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Date of Birth</p>
+                  <p className="text-foreground">{new Date(patient.dateOfBirth).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Blood Type</p>
+                  <p className="text-foreground">{patient.bloodType}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Phone</p>
+                  <p className="text-foreground">{patient.phone}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Email</p>
+                  <p className="text-foreground">{patient.email}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-sm text-muted-foreground">Address</p>
+                  <p className="text-foreground">{patient.address}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Emergency Contact</p>
+                  <p className="text-foreground">{patient.emergencyContact}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Last Visit</p>
+                  <p className="text-foreground">
+                    {patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'Never'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Anamnesis Tab */}
+          {activeTab === 'anamnesis' && (
+            <div className="space-y-6">
+              {/* Medical History */}
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-3">Medical History</h3>
+                {permissions.canViewAllPatientDetails ? (
+                  patient.medicalHistory.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {patient.medicalHistory.map((condition, index) => (
+                        <span
+                          key={index}
+                          className="bg-muted text-muted-foreground px-3 py-1 rounded-full text-sm"
+                        >
+                          {condition}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">No medical history recorded</p>
+                  )
+                ) : (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-yellow-800">Restricted Access</p>
+                      <p className="text-sm text-yellow-700 mt-1">Full medical history is only accessible to doctors for patient privacy.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Allergies */}
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-3">Allergies</h3>
+                {patient.allergies.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {patient.allergies.map((allergy, index) => (
+                      <span
+                        key={index}
+                        className="bg-destructive/10 text-destructive px-3 py-1 rounded-full text-sm font-medium"
+                      >
+                        {allergy}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">No known allergies</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Files Tab */}
+          {activeTab === 'files' && (
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Patient Files</h3>
+              <div className="text-center py-12">
+                <FolderOpen className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No files uploaded yet</p>
+                <button className="mt-4 text-sm text-primary hover:underline">Upload File</button>
+              </div>
+            </div>
+          )}
+
+          {/* Scheduled Visits Tab */}
+          {activeTab === 'scheduled' && (
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Scheduled Appointments</h3>
+              <div className="text-center py-12">
+                <Calendar className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No scheduled appointments</p>
+                <button className="mt-4 text-sm text-primary hover:underline">Schedule Appointment</button>
+              </div>
+            </div>
+          )}
+
+          {/* Visit History Tab */}
+          {activeTab === 'history' && (
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Visit History</h3>
+              <div className="space-y-3">
+                {patient.lastVisit ? (
+                  <div className="border border-border rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-medium text-foreground">General Checkup</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {new Date(patient.lastVisit).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Completed</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Clock className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No visit history</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Planned Treatments Tab */}
+          {activeTab === 'treatments' && (
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Planned Treatments</h3>
+              <div className="text-center py-12">
+                <ClipboardList className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No planned treatments</p>
+                <button className="mt-4 text-sm text-primary hover:underline">Add Treatment Plan</button>
               </div>
             </div>
           )}
         </div>
 
         {/* Footer Actions */}
-        <div className="sticky bottom-0 bg-card border-t border-border p-6 flex gap-3 flex-wrap">
+        <div className="bg-card border-t border-border p-6 flex gap-3 items-center overflow-x-auto">
           {permissions.canEditPatientMedical ? (
             <button
               onClick={onEdit}
@@ -381,6 +615,15 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
                 </button>
               </Tooltip>
             )
+          )}
+          {permissions.canEditPatientMedical && (
+            <button
+              onClick={onDelete}
+              className="flex items-center gap-2 bg-destructive text-destructive-foreground px-4 py-2 rounded-lg hover:bg-destructive/90 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Patient
+            </button>
           )}
           <button
             onClick={onClose}

@@ -138,7 +138,7 @@ const AuditLogs: React.FC<AuditLogsProps> = ({ userRole }) => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
+        <div className="text-center flex-1">
           <h1 className="text-3xl font-bold text-foreground">{t.auditLogsTitle}</h1>
           <p className="text-muted-foreground">{t.auditLogsDescription}</p>
         </div>
@@ -198,28 +198,24 @@ const AuditLogs: React.FC<AuditLogsProps> = ({ userRole }) => {
           title={t.totalEvents}
           value={logs.length.toString()}
           icon={Shield}
-          trend="All security events"
           color="primary"
         />
         <StatCard
           title={t.deniedAccess}
           value={logs.filter(l => !l.access_granted).length.toString()}
           icon={AlertTriangle}
-          trend="Failed access attempts"
           color="accent"
         />
         <StatCard
           title={t.loginEvents}
           value={logs.filter(l => l.event_type === 'login').length.toString()}
           icon={Shield}
-          trend="Authentication events"
           color="secondary"
         />
         <StatCard
           title={t.dataModifications}
           value={logs.filter(l => l.event_type === 'data_modification').length.toString()}
           icon={Shield}
-          trend="Create/Update/Delete"
           color="primary"
         />
       </div>
