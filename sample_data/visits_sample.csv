@@ -1,0 +1,46 @@
+date,patient_id,patient_name,age,gender,visit_type,time,queue_number,wait_time_minutes
+2026-02-18,1,Maria Santos,39,Female,Hypertension,09:30:00,5,15
+2026-02-18,2,Juan Dela Cruz,34,Male,Flu,10:15:00,8,25
+2026-02-18,3,Rosa Garcia,46,Female,Common Cold,11:00:00,12,20
+2026-02-18,4,Pedro Reyes,29,Male,Fever,13:45:00,18,18
+2026-02-18,5,Ana Lopez,36,Female,Allergies,14:30:00,22,12
+2026-02-17,1,Maria Santos,39,Female,Hypertension,09:00:00,3,10
+2026-02-17,6,Carlos Mendoza,42,Male,Diabetes,10:30:00,7,22
+2026-02-17,7,Elena Torres,32,Female,Flu,11:15:00,11,28
+2026-02-17,8,Miguel Ramos,49,Male,Headache,14:00:00,16,15
+2026-02-17,9,Sofia Cruz,26,Female,Cough and Colds,15:30:00,20,25
+2026-02-16,10,Diego Fernandez,37,Male,Flu,09:15:00,4,12
+2026-02-16,2,Juan Dela Cruz,34,Male,Common Cold,10:00:00,6,18
+2026-02-16,11,Carmen Vargas,31,Female,Stomach Pain,11:45:00,9,20
+2026-02-16,12,Luis Castro,44,Male,Diabetes,13:30:00,14,16
+2026-02-16,13,Isabella Morales,28,Female,Flu,15:00:00,19,24
+2026-02-15,3,Rosa Garcia,46,Female,Diabetes,09:45:00,5,14
+2026-02-15,14,Ricardo Jimenez,40,Male,Hypertension,11:00:00,10,19
+2026-02-15,15,Lucia Herrera,33,Female,Fever,14:15:00,17,22
+2026-02-15,4,Pedro Reyes,29,Male,Common Cold,15:45:00,21,17
+2026-02-15,5,Ana Lopez,36,Female,Allergies,16:30:00,24,28
+2026-02-14,6,Carlos Mendoza,42,Male,Hypertension,09:30:00,6,15
+2026-02-14,7,Elena Torres,32,Female,Cough and Colds,10:45:00,9,21
+2026-02-14,1,Maria Santos,39,Female,Flu,12:00:00,13,26
+2026-02-14,8,Miguel Ramos,49,Male,Headache,14:30:00,18,18
+2026-02-14,9,Sofia Cruz,26,Female,Common Cold,16:00:00,22,20
+2026-02-13,10,Diego Fernandez,37,Male,Flu,09:00:00,2,8
+2026-02-13,11,Carmen Vargas,31,Female,Headache,10:30:00,8,16
+2026-02-13,2,Juan Dela Cruz,34,Male,Flu,11:45:00,11,23
+2026-02-13,12,Luis Castro,44,Male,Diabetes,13:15:00,15,19
+2026-02-13,13,Isabella Morales,28,Female,Common Cold,15:30:00,20,25
+2026-02-12,14,Ricardo Jimenez,40,Male,Hypertension,09:15:00,4,11
+2026-02-12,3,Rosa Garcia,46,Female,Diabetes,10:45:00,7,18
+2026-02-12,15,Lucia Herrera,33,Female,Fever,12:30:00,12,22
+2026-02-12,4,Pedro Reyes,29,Male,Flu,14:00:00,16,20
+2026-02-12,5,Ana Lopez,36,Female,Cough and Colds,16:15:00,21,27
+2026-02-11,6,Carlos Mendoza,42,Male,Hypertension,10:00:00,5,14
+2026-02-11,7,Elena Torres,32,Female,Common Cold,11:30:00,9,19
+2026-02-11,1,Maria Santos,39,Female,Flu,13:45:00,14,24
+2026-02-11,8,Miguel Ramos,49,Male,Other,15:00:00,18,16
+2026-02-11,9,Sofia Cruz,26,Female,Allergies,16:30:00,22,21
+2026-02-10,10,Diego Fernandez,37,Male,Flu,09:30:00,3,10
+2026-02-10,11,Carmen Vargas,31,Female,Stomach Pain,11:00:00,8,17
+2026-02-10,2,Juan Dela Cruz,34,Male,Common Cold,12:15:00,11,20
+2026-02-10,12,Luis Castro,44,Male,Diabetes,14:30:00,16,18
+2026-02-10,13,Isabella Morales,28,Female,Flu,16:00:00,20,25

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { PatientFile, Patient } from '../types';
 import { Upload, Download, Trash2, File, Calendar, FileText, Folder, ChevronDown, ChevronRight, ArrowUpDown, Eye, X, Shield } from 'lucide-react';
 import FileUpload from './FileUpload';
@@ -238,10 +239,13 @@ const FileManagement: React.FC<FileManagementProps> = ({ patients, userRole }) =
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="text-center">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">{t.fileManagementTitle}</h1>
-        <p className="text-sm md:text-base text-muted-foreground">Manage patient medical documents and records</p>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <p className="text-sm text-gray-600">Manage patient medical documents and records</p>
+      </motion.div>
 
       {/* Upload Button */}
       <button

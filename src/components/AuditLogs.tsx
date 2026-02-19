@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Shield, Search, Filter, Download, AlertTriangle } from 'lucide-react';
 import { auditService } from '../lib/services/auditService';
 import { useTranslation } from '../lib/translations';
@@ -138,10 +139,14 @@ const AuditLogs: React.FC<AuditLogsProps> = ({ userRole }) => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="text-center flex-1">
-          <h1 className="text-3xl font-bold text-foreground">{t.auditLogsTitle}</h1>
-          <p className="text-muted-foreground">{t.auditLogsDescription}</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex-1"
+        >
+          <p className="text-sm text-gray-600">{t.auditLogsDescription}</p>
+        </motion.div>
         <button
           onClick={() => {
             const csv = [

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Save, Bell, Monitor, Users, Shield, AlertCircle, Globe, Database, Download, Upload, Loader, CheckCircle, LogOut } from 'lucide-react';
 import { getPermissions } from '../lib/permissions';
 import { auditService } from '../lib/services/auditService';
@@ -278,11 +279,10 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="text-center flex-1">
-          <h1 className="text-3xl font-bold text-foreground">{t.settingsTitle}</h1>
-          <p className="text-muted-foreground">{t.settingsDescription}</p>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8 space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+        <div className="flex-1">
+          <p className="text-sm text-gray-600">{t.settingsDescription}</p>
         </div>
         {permissions.canConfigureSystem && (
           <button
@@ -314,38 +314,50 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
         )}
       </div>
 
+      {/* Info Box - Profile & Password Settings Location */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm text-blue-900">
+              <strong>Looking for profile or password settings?</strong> Click your profile picture in the top navigation bar to access account settings.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {!permissions.canConfigureSystem && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Staff Language Settings */}
-          <div className="bg-card border border-border rounded-lg p-6">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3 mb-4">
               <Globe className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold text-foreground">{t.language}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t.language}</h3>
             </div>
             <div className="space-y-4">
               <div className="flex gap-2">
                 <button
                   onClick={() => handleLanguageChange('en')}
-                  className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                  className={`flex-1 px-4 py-2 rounded-md transition-colors text-sm ${
                     currentLanguage === 'en'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-foreground hover:bg-muted/80'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   {t.english}
                 </button>
                 <button
                   onClick={() => handleLanguageChange('tl')}
-                  className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                  className={`flex-1 px-4 py-2 rounded-md transition-colors text-sm ${
                     currentLanguage === 'tl'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-foreground hover:bg-muted/80'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   {t.tagalog}
                 </button>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-600">
                 Select your preferred language for the interface. Changes will take effect after page reload.
               </p>
             </div>
@@ -368,17 +380,17 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
           </div>
 
           {/* Logout Section - Staff */}
-          <div className="bg-card border border-border rounded-lg p-6">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3 mb-4">
               <LogOut className="w-5 h-5 text-destructive" />
-              <h3 className="text-lg font-semibold text-foreground">Logout</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Logout</h3>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm text-gray-600 mb-4">
               Sign out of your account. You will need to log in again to access the system.
             </p>
             <button
               onClick={onLogout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors font-medium"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors font-medium shadow-sm"
             >
               <LogOut className="w-5 h-5" />
               {t.logout}
@@ -388,16 +400,16 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
       )}
 
       {permissions.canConfigureSystem && (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
         {/* Notifications */}
-        <div className="bg-card border border-border rounded-lg p-6">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3 mb-4">
             <Bell className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold text-foreground">Notifications</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground">Queue Updates</label>
+              <label className="text-sm font-medium text-gray-900">Queue Updates</label>
               <input
                 type="checkbox"
                 checked={settings.notifications.queueUpdates}
@@ -405,11 +417,11 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
                   ...settings,
                   notifications: { ...settings.notifications, queueUpdates: e.target.checked }
                 })}
-                className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-ring"
+                className="w-4 h-4 text-primary bg-white border-gray-300 rounded focus:ring-primary"
               />
             </div>
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground">New Patients</label>
+              <label className="text-sm font-medium text-gray-900">New Patients</label>
               <input
                 type="checkbox"
                 checked={settings.notifications.newPatients}
@@ -417,11 +429,11 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
                   ...settings,
                   notifications: { ...settings.notifications, newPatients: e.target.checked }
                 })}
-                className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-ring"
+                className="w-4 h-4 text-primary bg-white border-gray-300 rounded focus:ring-primary"
               />
             </div>
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground">System Alerts</label>
+              <label className="text-sm font-medium text-gray-900">System Alerts</label>
               <input
                 type="checkbox"
                 checked={settings.notifications.systemAlerts}
@@ -429,21 +441,21 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
                   ...settings,
                   notifications: { ...settings.notifications, systemAlerts: e.target.checked }
                 })}
-                className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-ring"
+                className="w-4 h-4 text-primary bg-white border-gray-300 rounded focus:ring-primary"
               />
             </div>
           </div>
         </div>
 
         {/* Display Settings */}
-        <div className="bg-card border border-border rounded-lg p-6">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3 mb-4">
             <Monitor className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold text-foreground">Display Settings</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Display Settings</h3>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground">Auto Refresh</label>
+              <label className="text-sm font-medium text-gray-900">Auto Refresh</label>
               <input
                 type="checkbox"
                 checked={settings.display.autoRefresh}
@@ -451,11 +463,11 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
                   ...settings,
                   display: { ...settings.display, autoRefresh: e.target.checked }
                 })}
-                className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-ring"
+                className="w-4 h-4 text-primary bg-white border-gray-300 rounded focus:ring-primary"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Refresh Interval (seconds)
               </label>
               <input
@@ -467,11 +479,11 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
                   ...settings,
                   display: { ...settings.display, refreshInterval: parseInt(e.target.value) }
                 })}
-                className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Max Display Items
               </label>
               <input
@@ -483,31 +495,31 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
                   ...settings,
                   display: { ...settings.display, maxDisplayItems: parseInt(e.target.value) }
                 })}
-                className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 <Globe className="w-4 h-4 inline mr-2" />
                 {t.language}
               </label>
               <div className="flex gap-2">
                 <button
                   onClick={() => handleLanguageChange('en')}
-                  className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                  className={`flex-1 px-4 py-2 rounded-md transition-colors text-sm ${
                     currentLanguage === 'en'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-foreground hover:bg-muted/80'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   {t.english}
                 </button>
                 <button
                   onClick={() => handleLanguageChange('tl')}
-                  className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                  className={`flex-1 px-4 py-2 rounded-md transition-colors text-sm ${
                     currentLanguage === 'tl'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-foreground hover:bg-muted/80'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   {t.tagalog}
@@ -518,14 +530,14 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
         </div>
 
         {/* Queue Management */}
-        <div className="bg-card border border-border rounded-lg p-6">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3 mb-4">
             <Users className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold text-foreground">Queue Management</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Queue Management</h3>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground">Priority for Senior Citizens</label>
+              <label className="text-sm font-medium text-gray-900">Priority for Senior Citizens</label>
               <input
                 type="checkbox"
                 checked={settings.queue.priorityForSeniors}
@@ -533,11 +545,11 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
                   ...settings,
                   queue: { ...settings.queue, priorityForSeniors: e.target.checked }
                 })}
-                className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-ring"
+                className="w-4 h-4 text-primary bg-white border-gray-300 rounded focus:ring-primary"
               />
             </div>
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground">Priority for PWDs</label>
+              <label className="text-sm font-medium text-gray-900">Priority for PWDs</label>
               <input
                 type="checkbox"
                 checked={settings.queue.priorityForPWD}
@@ -545,11 +557,11 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
                   ...settings,
                   queue: { ...settings.queue, priorityForPWD: e.target.checked }
                 })}
-                className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-ring"
+                className="w-4 h-4 text-primary bg-white border-gray-300 rounded focus:ring-primary"
               />
             </div>
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground">Priority for Pregnant Women</label>
+              <label className="text-sm font-medium text-gray-900">Priority for Pregnant Women</label>
               <input
                 type="checkbox"
                 checked={settings.queue.priorityForPregnant}
@@ -557,11 +569,11 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
                   ...settings,
                   queue: { ...settings.queue, priorityForPregnant: e.target.checked }
                 })}
-                className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-ring"
+                className="w-4 h-4 text-primary bg-white border-gray-300 rounded focus:ring-primary"
               />
             </div>
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground">Auto Advance Queue</label>
+              <label className="text-sm font-medium text-gray-900">Auto Advance Queue</label>
               <input
                 type="checkbox"
                 checked={settings.queue.autoAdvance}
@@ -569,21 +581,21 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
                   ...settings,
                   queue: { ...settings.queue, autoAdvance: e.target.checked }
                 })}
-                className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-ring"
+                className="w-4 h-4 text-primary bg-white border-gray-300 rounded focus:ring-primary"
               />
             </div>
           </div>
         </div>
 
         {/* System Settings */}
-        <div className="bg-card border border-border rounded-lg p-6">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3 mb-4">
             <Shield className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold text-foreground">System Settings</h3>
+            <h3 className="text-lg font-semibold text-gray-900">System Settings</h3>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Backup Frequency
               </label>
               <select
@@ -592,7 +604,7 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
                   ...settings,
                   system: { ...settings.system, backupFrequency: e.target.value as 'hourly' | 'daily' | 'weekly' }
                 })}
-                className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="hourly">Hourly</option>
                 <option value="daily">Daily</option>
@@ -600,7 +612,7 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Data Retention (days)
               </label>
               <input
@@ -612,11 +624,11 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
                   ...settings,
                   system: { ...settings.system, dataRetention: parseInt(e.target.value) }
                 })}
-                className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground">Enable Audit Log</label>
+              <label className="text-sm font-medium text-gray-900">Enable Audit Log</label>
               <input
                 type="checkbox"
                 checked={settings.system.auditLog}
@@ -624,26 +636,26 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
                   ...settings,
                   system: { ...settings.system, auditLog: e.target.checked }
                 })}
-                className="w-4 h-4 text-primary bg-input border-border rounded focus:ring-ring"
+                className="w-4 h-4 text-primary bg-white border-gray-300 rounded focus:ring-primary"
               />
             </div>
           </div>
         </div>
 
         {/* Database Backup */}
-        <div className="bg-card border border-border rounded-lg p-6 lg:col-span-2">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow lg:col-span-2 xl:col-span-3">
           <div className="flex items-center gap-3 mb-4">
             <Database className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold text-foreground">Database Backup & Restore</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Database Backup & Restore</h3>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             {/* Backup Section */}
             <div className="space-y-4">
-              <h4 className="font-semibold text-foreground flex items-center gap-2">
+              <h4 className="font-semibold text-gray-900 flex items-center gap-2">
                 <Download className="w-4 h-4" />
                 Backup Database
               </h4>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-600">
                 Create a complete backup of all system data. The backup will be downloaded as a JSON file.
               </p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -670,7 +682,7 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
               <button
                 onClick={handleDatabaseBackup}
                 disabled={isBackingUp || isRestoring}
-                className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed w-full justify-center"
+                className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed w-full justify-center shadow-sm"
               >
                 {isBackingUp ? (
                   <>
@@ -754,27 +766,12 @@ const Settings: React.FC<SettingsProps> = ({ userRole, onLogout }) => {
           </div>
         </div>
 
-        {/* Logout Section - Doctor */}
-        <div className="bg-card border border-border rounded-lg p-6 lg:col-span-2">
-          <div className="flex items-center gap-3 mb-4">
-            <LogOut className="w-5 h-5 text-destructive" />
-            <h3 className="text-lg font-semibold text-foreground">Logout</h3>
-          </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Sign out of your account. You will need to log in again to access the system.
-          </p>
-          <button
-            onClick={onLogout}
-            className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors font-medium"
-          >
-            <LogOut className="w-5 h-5" />
-            {t.logout}
-          </button>
-        </div>
-      </div>
+        
+  </div>
+        
       )}
     </div>
   );
-};
+}
 
 export default Settings;

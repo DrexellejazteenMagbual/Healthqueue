@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Patient } from '../types';
-import { Search, Plus, Edit, UserPlus, ArrowUpDown, AlertCircle, Trash2, User, FileText, Calendar, ClipboardList, Clock, FolderOpen } from 'lucide-react';
+import { Search, Plus, Edit, UserPlus, ArrowUpDown, AlertCircle, Trash2, User, FileText, Calendar, ClipboardList, Clock, FolderOpen, Eye } from 'lucide-react';
 import PatientForm from './PatientForm';
 import { getPermissions } from '../lib/permissions';
 import { auditService } from '../lib/services/auditService';
@@ -117,32 +118,34 @@ const PatientProfiles: React.FC<PatientProfilesProps> = ({
 
   return (
     <div className="p-6 space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-foreground">{t.patientProfiles}</h1>
-        <p className="text-muted-foreground">Manage patient information and records</p>
-        <hr />
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <p className="text-sm text-gray-600">Manage patient information and records</p>
+      </motion.div>
 
       <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
           <input
             type="text"
             placeholder="Search patients by name, phone, or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
         {/* Sort By */}
         <div className="relative w-full md:w-64">
-          <ArrowUpDown className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <ArrowUpDown className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="w-full pl-10 pr-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring appearance-none cursor-pointer"
+            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
           >
             <option value="name">Sort by Name</option>
             <option value="risk-high">Sort by Risk (High First)</option>
@@ -155,78 +158,158 @@ const PatientProfiles: React.FC<PatientProfilesProps> = ({
             setEditingPatient(null);
             setShowForm(true);
           }}
-          className="flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap"
+          className="flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors whitespace-nowrap shadow-sm"
         >
           <Plus className="w-4 h-4" />
           {t.addPatient}
         </button>
       </div>
 
-      <div className="overflow-auto max-h-[70vh]">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {sortedPatients.map((patient) => {
-            const initials = `${patient.firstName.charAt(0)}${patient.lastName.charAt(0)}`.toUpperCase();
-            const age = new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear();
-            
-            return (
-              <div
-                key={patient.id}
-                className="bg-card border border-border rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={async () => {
-                  const userEmail = localStorage.getItem('userName') || 'unknown@clinic.com';
-                  await auditService.logDataAccess(
-                    userEmail,
-                    userRole,
-                    'patient',
-                    patient.id,
-                    'view',
-                    true
+      {/* Table Container */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto overflow-y-auto max-h-[80vh]">
+          <table className="w-full border-separate border-spacing-0">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">
+                  Profile
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">
+                  Name
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">
+                  Age
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">
+                  Gender
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">
+                  Phone
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">
+                  Email
+                </th>
+                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap border-b border-gray-200">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-100">
+              {sortedPatients.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-16 text-center">
+                    <User className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                    <p className="text-gray-500 font-medium">No patients found</p>
+                    <p className="text-sm text-gray-400 mt-1">Add a new patient to get started</p>
+                  </td>
+                </tr>
+              ) : (
+                sortedPatients.map((patient) => {
+                  const initials = `${patient.firstName.charAt(0)}${patient.lastName.charAt(0)}`.toUpperCase();
+                  const age = new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear();
+                  
+                  return (
+                    <tr 
+                      key={patient.id} 
+                      className="hover:bg-gray-50 transition-colors group"
+                    >
+                      {/* Profile Picture */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className={`w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-2 transition-all ${
+                          patient.riskLevel === 'High' ? 'border-red-500' :
+                          patient.riskLevel === 'Medium' ? 'border-amber-500' :
+                          patient.riskLevel === 'Low' ? 'border-green-500' :
+                          'border-gray-300'
+                        }`}>
+                          {patient.profilePicture ? (
+                            <img 
+                              src={patient.profilePicture} 
+                              alt={`${patient.firstName} ${patient.lastName}`} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-sm font-bold text-primary">{initials}</span>
+                          )}
+                        </div>
+                      </td>
+                      
+                      {/* Name */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-gray-900">
+                          {patient.firstName} {patient.lastName}
+                        </div>
+                      </td>
+                      
+                      {/* Age */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-600">{age}</div>
+                      </td>
+                      
+                      {/* Gender */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-600">{patient.gender}</div>
+                      </td>
+                      
+                      {/* Phone */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-600">{patient.phone}</div>
+                      </td>
+                      
+                      {/* Email */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-600">{patient.email}</div>
+                      </td>
+                      
+                      {/* Actions */}
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Tooltip content="View Patient Details">
+                            <button
+                              onClick={async () => {
+                                const userEmail = localStorage.getItem('userName') || 'unknown@clinic.com';
+                                await auditService.logDataAccess(
+                                  userEmail,
+                                  userRole,
+                                  'patient',
+                                  patient.id,
+                                  'view',
+                                  true
+                                );
+                                setSelectedPatient(patient);
+                              }}
+                              className="text-gray-500 hover:text-primary transition-all p-2 hover:bg-blue-50 rounded-lg group-hover:bg-white"
+                            >
+                              <Eye className="w-5 h-5" />
+                            </button>
+                          </Tooltip>
+                          
+                          {permissions.canEditPatientMedical ? (
+                            <Tooltip content="Delete Patient">
+                              <button
+                                onClick={() => setDeleteConfirmId(patient.id)}
+                                className="text-gray-500 hover:text-red-600 transition-all p-2 hover:bg-red-50 rounded-lg group-hover:bg-white"
+                              >
+                                <Trash2 className="w-5 h-5" />
+                              </button>
+                            </Tooltip>
+                          ) : (
+                            <Tooltip content="Only doctors can delete patients">
+                              <button
+                                disabled
+                                className="text-gray-300 cursor-not-allowed p-2"
+                              >
+                                <Trash2 className="w-5 h-5" />
+                              </button>
+                            </Tooltip>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
                   );
-                  setSelectedPatient(patient);
-                }}
-              >
-                {/* Card content - horizontal layout */}
-                <div className="flex gap-4">
-                  {/* Profile Picture */}
-                  <div className="flex-shrink-0">
-                    <div className={`w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-4 ${
-                      patient.riskLevel === 'High' ? 'border-red-500' :
-                      patient.riskLevel === 'Medium' ? 'border-yellow-500' :
-                      patient.riskLevel === 'Low' ? 'border-green-500' :
-                      'border-border'
-                    }`}>
-                      {patient.profilePicture ? (
-                        <img 
-                          src={patient.profilePicture} 
-                          alt={`${patient.firstName} ${patient.lastName}`} 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-xl font-bold text-primary">{initials}</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Patient Info */}
-                  <div className="flex-1 space-y-1">
-                    <h3 className="font-semibold text-foreground text-base">
-                      {patient.firstName} {patient.lastName}
-                    </h3>
-                    
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>{age} yrs</span>
-                      <span>•</span>
-                      <span>{patient.gender}</span>
-                    </div>
-
-                    <div className="text-sm text-muted-foreground">
-                      {patient.phone}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -260,16 +343,28 @@ const PatientProfiles: React.FC<PatientProfilesProps> = ({
       )}
 
       {deleteConfirmId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold text-foreground mb-4">Confirm Delete</h3>
-            <p className="text-muted-foreground mb-6">
-              Are you sure you want to delete this patient? This action cannot be undone and will permanently remove all patient records.
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]"
+        >
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-xl p-6 max-w-md w-full relative shadow-2xl border border-gray-200"
+          >
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
+              <AlertCircle className="w-6 h-6 text-red-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Patient?</h3>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              This action cannot be undone and will permanently remove all patient records, medical history, and associated data.
             </p>
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirmId(null)}
-                className="px-4 py-2 bg-card border border-border text-foreground rounded-lg hover:bg-accent transition-colors"
+                className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium"
               >
                 Cancel
               </button>
@@ -278,13 +373,13 @@ const PatientProfiles: React.FC<PatientProfilesProps> = ({
                   deletePatient(deleteConfirmId);
                   setDeleteConfirmId(null);
                 }}
-                className="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 transition-colors"
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium shadow-sm"
               >
-                Delete
+                Delete Patient
               </button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
     </div>
   );
@@ -319,31 +414,44 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-card border border-border rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] overflow-y-auto"
+    >
+      <motion.div 
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col relative shadow-2xl border border-gray-200"
+      >
         {/* Header */}
-        <div className="bg-card border-b border-border p-6 flex items-start justify-between">
+        <div className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 p-6 flex items-start justify-between rounded-t-xl">
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-foreground">
+            <h2 className="text-2xl font-bold text-gray-900">
               {patient.firstName} {patient.lastName}
             </h2>
-            <p className="text-sm text-muted-foreground mt-1">{age} years old • {patient.gender}</p>
+            <p className="text-sm text-gray-500 mt-1.5 flex items-center gap-2">
+              <span>{age} years old</span>
+              <span className="text-gray-300">•</span>
+              <span>{patient.gender}</span>
+            </p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-border bg-muted/50">
-          <div className="flex overflow-x-auto">
+        <div className="border-b border-gray-200 bg-white">
+          <div className="flex overflow-x-auto px-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-all relative ${
                     activeTab === tab.id
-                      ? 'border-primary text-primary bg-card'
-                      : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-card/50'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -362,9 +470,9 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
               <div className="flex items-center gap-6">
                 <div className={`w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-4 ${
                   patient.riskLevel === 'High' ? 'border-red-500' :
-                  patient.riskLevel === 'Medium' ? 'border-yellow-500' :
+                  patient.riskLevel === 'Medium' ? 'border-amber-500' :
                   patient.riskLevel === 'Low' ? 'border-green-500' :
-                  'border-border'
+                  'border-gray-300'
                 }`}>
                   {patient.profilePicture ? (
                     <img 
@@ -377,29 +485,29 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
                   )}
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-foreground">{patient.firstName} {patient.lastName}</h3>
-                  <p className="text-muted-foreground">{patient.email}</p>
-                  <p className="text-muted-foreground">{patient.phone}</p>
+                  <h3 className="text-2xl font-bold text-gray-900">{patient.firstName} {patient.lastName}</h3>
+                  <p className="text-gray-600">{patient.email}</p>
+                  <p className="text-gray-600">{patient.phone}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Blood Type</p>
-                  <p className="text-lg font-semibold text-foreground">{patient.bloodType}</p>
+                  <p className="text-sm text-gray-600">Blood Type</p>
+                  <p className="text-lg font-semibold text-gray-900">{patient.bloodType}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Date of Birth</p>
-                  <p className="text-lg font-semibold text-foreground">{new Date(patient.dateOfBirth).toLocaleDateString()}</p>
+                  <p className="text-sm text-gray-600">Date of Birth</p>
+                  <p className="text-lg font-semibold text-gray-900">{new Date(patient.dateOfBirth).toLocaleDateString()}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Last Visit</p>
-                  <p className="text-lg font-semibold text-foreground">
+                  <p className="text-sm text-gray-600">Last Visit</p>
+                  <p className="text-lg font-semibold text-gray-900">
                     {patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'Never'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Risk Level</p>
-                  <p className="text-lg font-semibold text-foreground">{patient.riskLevel || 'Low'}</p>
+                  <p className="text-sm text-gray-600">Risk Level</p>
+                  <p className="text-lg font-semibold text-gray-900">{patient.riskLevel || 'Low'}</p>
                 </div>
               </div>
             </div>
@@ -408,35 +516,35 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
           {/* General Information Tab */}
           {activeTab === 'general' && (
             <div>
-              <h3 className="text-lg font-semibold text-foreground mb-3">General Information</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">General Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Date of Birth</p>
-                  <p className="text-foreground">{new Date(patient.dateOfBirth).toLocaleDateString()}</p>
+                  <p className="text-sm text-gray-600">Date of Birth</p>
+                  <p className="text-gray-900">{new Date(patient.dateOfBirth).toLocaleDateString()}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Blood Type</p>
-                  <p className="text-foreground">{patient.bloodType}</p>
+                  <p className="text-sm text-gray-600">Blood Type</p>
+                  <p className="text-gray-900">{patient.bloodType}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Phone</p>
-                  <p className="text-foreground">{patient.phone}</p>
+                  <p className="text-sm text-gray-600">Phone</p>
+                  <p className="text-gray-900">{patient.phone}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="text-foreground">{patient.email}</p>
+                  <p className="text-sm text-gray-600">Email</p>
+                  <p className="text-gray-900">{patient.email}</p>
                 </div>
                 <div className="md:col-span-2">
-                  <p className="text-sm text-muted-foreground">Address</p>
-                  <p className="text-foreground">{patient.address}</p>
+                  <p className="text-sm text-gray-600">Address</p>
+                  <p className="text-gray-900">{patient.address}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Emergency Contact</p>
-                  <p className="text-foreground">{patient.emergencyContact}</p>
+                  <p className="text-sm text-gray-600">Emergency Contact</p>
+                  <p className="text-gray-900">{patient.emergencyContact}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Last Visit</p>
-                  <p className="text-foreground">
+                  <p className="text-sm text-gray-600">Last Visit</p>
+                  <p className="text-gray-900">
                     {patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'Never'}
                   </p>
                 </div>
@@ -449,21 +557,21 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
             <div className="space-y-6">
               {/* Medical History */}
               <div>
-                <h3 className="text-lg font-semibold text-foreground mb-3">Medical History</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Medical History</h3>
                 {permissions.canViewAllPatientDetails ? (
                   patient.medicalHistory.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {patient.medicalHistory.map((condition, index) => (
                         <span
                           key={index}
-                          className="bg-muted text-muted-foreground px-3 py-1 rounded-full text-sm"
+                          className="bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-sm"
                         >
                           {condition}
                         </span>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground">No medical history recorded</p>
+                    <p className="text-gray-600">No medical history recorded</p>
                   )
                 ) : (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
@@ -478,20 +586,20 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
 
               {/* Allergies */}
               <div>
-                <h3 className="text-lg font-semibold text-foreground mb-3">Allergies</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Allergies</h3>
                 {patient.allergies.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {patient.allergies.map((allergy, index) => (
                       <span
                         key={index}
-                        className="bg-destructive/10 text-destructive px-3 py-1 rounded-full text-sm font-medium"
+                        className="bg-red-100 text-red-700 px-3 py-1 rounded-md text-sm font-medium"
                       >
                         {allergy}
                       </span>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground">No known allergies</p>
+                  <p className="text-gray-600">No known allergies</p>
                 )}
               </div>
             </div>
@@ -500,10 +608,10 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
           {/* Files Tab */}
           {activeTab === 'files' && (
             <div>
-              <h3 className="text-lg font-semibold text-foreground mb-4">Patient Files</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Patient Files</h3>
               <div className="text-center py-12">
-                <FolderOpen className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No files uploaded yet</p>
+                <FolderOpen className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-600">No files uploaded yet</p>
                 <button className="mt-4 text-sm text-primary hover:underline">Upload File</button>
               </div>
             </div>
@@ -512,10 +620,10 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
           {/* Scheduled Visits Tab */}
           {activeTab === 'scheduled' && (
             <div>
-              <h3 className="text-lg font-semibold text-foreground mb-4">Scheduled Appointments</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Scheduled Appointments</h3>
               <div className="text-center py-12">
-                <Calendar className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No scheduled appointments</p>
+                <Calendar className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-600">No scheduled appointments</p>
                 <button className="mt-4 text-sm text-primary hover:underline">Schedule Appointment</button>
               </div>
             </div>
@@ -524,14 +632,14 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
           {/* Visit History Tab */}
           {activeTab === 'history' && (
             <div>
-              <h3 className="text-lg font-semibold text-foreground mb-4">Visit History</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Visit History</h3>
               <div className="space-y-3">
                 {patient.lastVisit ? (
-                  <div className="border border-border rounded-lg p-4">
+                  <div className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-medium text-foreground">General Checkup</p>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="font-medium text-gray-900">General Checkup</p>
+                        <p className="text-sm text-gray-600 mt-1">
                           {new Date(patient.lastVisit).toLocaleDateString()}
                         </p>
                       </div>
@@ -540,8 +648,8 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
                   </div>
                 ) : (
                   <div className="text-center py-12">
-                    <Clock className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No visit history</p>
+                    <Clock className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-600">No visit history</p>
                   </div>
                 )}
               </div>
@@ -551,10 +659,10 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
           {/* Planned Treatments Tab */}
           {activeTab === 'treatments' && (
             <div>
-              <h3 className="text-lg font-semibold text-foreground mb-4">Planned Treatments</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Planned Treatments</h3>
               <div className="text-center py-12">
-                <ClipboardList className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No planned treatments</p>
+                <ClipboardList className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-600">No planned treatments</p>
                 <button className="mt-4 text-sm text-primary hover:underline">Add Treatment Plan</button>
               </div>
             </div>
@@ -562,11 +670,11 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
         </div>
 
         {/* Footer Actions */}
-        <div className="bg-card border-t border-border p-6 flex gap-3 items-center overflow-x-auto">
+        <div className="bg-white border-t border-gray-200 p-6 flex gap-3 items-center overflow-x-auto">
           {permissions.canEditPatientMedical ? (
             <button
               onClick={onEdit}
-              className="flex items-center gap-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-lg hover:bg-secondary/80 transition-colors"
+              className="flex items-center gap-2 bg-gray-100 text-gray-900 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors shadow-sm"
             >
               <Edit className="w-4 h-4" />
               Edit Patient
@@ -575,7 +683,7 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
             <Tooltip content="Only doctors can edit patient medical information">
               <button
                 disabled
-                className="flex items-center gap-2 bg-secondary/50 text-secondary-foreground/50 px-4 py-2 rounded-lg cursor-not-allowed"
+                className="flex items-center gap-2 bg-gray-100/50 text-gray-400 px-4 py-2 rounded-md cursor-not-allowed"
               >
                 <Edit className="w-4 h-4" />
                 Edit Patient
@@ -587,7 +695,7 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
               onAddToQueue(patient.id, 'normal');
               onClose();
             }}
-            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors shadow-sm"
           >
             <UserPlus className="w-4 h-4" />
             Add to Queue
@@ -599,7 +707,7 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
                   onAddToQueue(patient.id, 'priority');
                   onClose();
                 }}
-                className="flex items-center gap-2 bg-destructive text-destructive-foreground px-4 py-2 rounded-lg hover:bg-destructive/90 transition-colors"
+                className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors shadow-sm"
               >
                 <UserPlus className="w-4 h-4" />
                 Priority Queue
@@ -608,7 +716,7 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
               <Tooltip content="Only doctors can add patients to priority queue">
                 <button
                   disabled
-                  className="flex items-center gap-2 bg-destructive/50 text-destructive-foreground/50 px-4 py-2 rounded-lg cursor-not-allowed"
+                  className="flex items-center gap-2 bg-red-300 text-white px-4 py-2 rounded-md cursor-not-allowed"
                 >
                   <UserPlus className="w-4 h-4" />
                   Priority Queue
@@ -619,7 +727,7 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
           {permissions.canEditPatientMedical && (
             <button
               onClick={onDelete}
-              className="flex items-center gap-2 bg-destructive text-destructive-foreground px-4 py-2 rounded-lg hover:bg-destructive/90 transition-colors"
+              className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors shadow-sm"
             >
               <Trash2 className="w-4 h-4" />
               Delete Patient
@@ -627,13 +735,13 @@ const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({ patient, onCl
           )}
           <button
             onClick={onClose}
-            className="ml-auto bg-card border border-border text-foreground px-4 py-2 rounded-lg hover:bg-accent transition-colors"
+            className="ml-auto bg-white border border-gray-200 text-gray-900 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors shadow-sm"
           >
             Close
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

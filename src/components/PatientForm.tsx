@@ -159,8 +159,8 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, onSubmit, onCancel }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 md:p-4 z-50">
-      <div className="bg-card border border-border rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
+    <div className="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen bg-black/50 flex items-center justify-center p-2 md:p-4 z-[9999] overflow-y-auto">
+      <div className="bg-card border border-border rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col relative">
         {/* Header */}
         <div className="border-b border-border p-4 md:p-6 flex items-center justify-between">
           <h2 className="text-xl md:text-2xl font-bold text-foreground">

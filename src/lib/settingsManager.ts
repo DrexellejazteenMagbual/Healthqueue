@@ -33,7 +33,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   },
   display: {
     autoRefresh: true,
-    refreshInterval: 30,
+    refreshInterval: 3,
     showPriority: true,
     maxDisplayItems: 15
   },

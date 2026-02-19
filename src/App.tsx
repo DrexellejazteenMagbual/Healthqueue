@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import PatientProfiles from './components/PatientProfiles';
@@ -15,8 +15,10 @@ import { Patient, QueueItem, AnalyticsData } from './types';
 import { patientService } from './lib/services/patientService';
 import { queueService } from './lib/services/queueService';
 import { auditService } from './lib/services/auditService';
+import { analyticsService } from './lib/services/analyticsService';
 import { settingsManager } from './lib/settingsManager';
 import { notificationService } from './lib/notificationService';
+import { supabase } from './lib/supabase';
 import { ToastProvider } from './lib/ToastProvider';
 
 const App: React.FC = () => {
@@ -36,6 +38,73 @@ const App: React.FC = () => {
     commonIllnesses: [],
     patientVolumeData: []
   });
+
+  // Fetch real-time analytics data
+  const fetchAnalyticsData = async () => {
+    try {
+      // Get current visits
+      const today = new Date().toISOString().split('T')[0];
+      const { data: dailyData } = await analyticsService.getDailyVisits(today);
+      const { data: weeklyData } = await analyticsService.getWeeklyVisits();
+      const { data: monthlyData } = await analyticsService.getMonthlyVisits();
+      
+      // Get previous period data for trend calculation
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const { data: yesterdayData } = await analyticsService.getDailyVisits(yesterday.toISOString().split('T')[0]);
+      
+      const lastWeekStart = new Date();
+      lastWeekStart.setDate(lastWeekStart.getDate() - 14);
+      const lastWeekEnd = new Date();
+      lastWeekEnd.setDate(lastWeekEnd.getDate() - 7);
+      const { data: lastWeekStats } = await analyticsService.getVisitStats(
+        lastWeekStart.toISOString().split('T')[0],
+        lastWeekEnd.toISOString().split('T')[0]
+      );
+      const lastWeekTotal = lastWeekStats ? Object.values(lastWeekStats).reduce((sum: number, val: any) => sum + val, 0) : 0;
+      
+      // Calculate trends
+      const dailyTrend = yesterdayData ? ((dailyData || 0) - yesterdayData) / Math.max(yesterdayData, 1) * 100 : 0;
+      const weeklyTrend = lastWeekTotal ? ((weeklyData || 0) - lastWeekTotal) / Math.max(lastWeekTotal, 1) * 100 : 0;
+      const monthlyTrend = 15; // Placeholder for now
+      
+      // Get common illnesses
+      const { data: illnesses } = await analyticsService.getCommonIllnesses(10);
+      
+      // Get patient volume data for last 7 days
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const { data: volumeStats } = await analyticsService.getVisitStats(
+        sevenDaysAgo.toISOString().split('T')[0],
+        today
+      );
+      
+      // Convert stats to array format
+      const patientVolumeData = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        patientVolumeData.push({
+          date: dateStr,
+          visits: volumeStats?.[dateStr] || 0
+        });
+      }
+      
+      setAnalyticsData({
+        dailyVisits: dailyData || 0,
+        weeklyVisits: weeklyData || 0,
+        monthlyVisits: monthlyData || 0,
+        dailyTrend: Math.round(dailyTrend * 10) / 10,
+        weeklyTrend: Math.round(weeklyTrend * 10) / 10,
+        monthlyTrend: Math.round(monthlyTrend * 10) / 10,
+        commonIllnesses: illnesses || [],
+        patientVolumeData
+      });
+    } catch (error) {
+      console.error('Error fetching analytics data:', error);
+    }
+  };
 
   // Handle login
   const handleLogin = (role: 'doctor' | 'staff', email: string) => {
@@ -144,31 +213,38 @@ const App: React.FC = () => {
 
     loadPatients();
     loadQueue();
+    fetchAnalyticsData();
 
-    // Sample analytics data (static for now)
-    setAnalyticsData({
-      dailyVisits: 25,
-      weeklyVisits: 150,
-      monthlyVisits: 620,
-      dailyTrend: 8,
-      weeklyTrend: 12,
-      monthlyTrend: 15,
-      commonIllnesses: [
-        { name: 'Hypertension', count: 45 },
-        { name: 'Diabetes', count: 32 },
-        { name: 'Common Cold', count: 28 },
-        { name: 'Arthritis', count: 22 }
-      ],
-      patientVolumeData: [
-        { date: '2024-01-01', visits: 20 },
-        { date: '2024-01-02', visits: 25 },
-        { date: '2024-01-03', visits: 18 },
-        { date: '2024-01-04', visits: 30 },
-        { date: '2024-01-05', visits: 22 },
-        { date: '2024-01-06', visits: 28 },
-        { date: '2024-01-07', visits: 15 }
-      ]
-    });
+    // Set up real-time subscription for analytics
+    const analyticsChannel = supabase
+      .channel('analytics-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'analytics'
+        },
+        () => {
+          fetchAnalyticsData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'illness_tracking'
+        },
+        () => {
+          fetchAnalyticsData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(analyticsChannel);
+    };
   }, [isAuthenticated]);
 
   // Auto-refresh functionality based on settings
@@ -220,6 +296,9 @@ const App: React.FC = () => {
         }));
         setQueue(mappedQueue);
       }
+      
+      // Refresh analytics data
+      await fetchAnalyticsData();
     };
 
     const intervalId = setInterval(loadData, refreshInterval);
@@ -395,110 +474,162 @@ const App: React.FC = () => {
     }
   };
 
-  // If not authenticated, show login screen
-  if (!isAuthenticated) {
   return (
     <ToastProvider>
       <Router>
-        <Login onLogin={handleLogin} />
+        <AppContent 
+          isAuthenticated={isAuthenticated}
+          userRole={userRole}
+          userName={userName}
+          patients={patients}
+          queue={queue}
+          analyticsData={analyticsData}
+          addPatient={addPatient}
+          updatePatient={updatePatient}
+          deletePatient={deletePatient}
+          addToQueue={addToQueue}
+          updateQueueStatus={updateQueueStatus}
+          removeFromQueue={removeFromQueue}
+          handleLogin={handleLogin}
+          handleLogout={handleLogout}
+        />
       </Router>
     </ToastProvider>
   );
+};
+
+// Separate component to access useLocation
+const AppContent: React.FC<{
+  isAuthenticated: boolean;
+  userRole: 'doctor' | 'staff' | null;
+  userName: string;
+  patients: Patient[];
+  queue: QueueItem[];
+  analyticsData: AnalyticsData;
+  addPatient: (patient: Omit<Patient, 'id' | 'createdAt'>) => void;
+  updatePatient: (id: string, updates: Partial<Patient>) => void;
+  deletePatient: (id: string) => void;
+  addToQueue: (patientId: string, priority?: 'normal' | 'priority') => void;
+  updateQueueStatus: (id: string, status: 'waiting' | 'called' | 'serving' | 'completed') => void;
+  removeFromQueue: (id: string) => void;
+  handleLogin: (role: 'doctor' | 'staff', email: string) => void;
+  handleLogout: () => void;
+}> = ({
+  isAuthenticated,
+  userRole,
+  userName,
+  patients,
+  queue,
+  analyticsData,
+  addPatient,
+  updatePatient,
+  deletePatient,
+  addToQueue,
+  updateQueueStatus,
+  removeFromQueue,
+  handleLogin,
+  handleLogout
+}) => {
+  const location = useLocation();
+  const isFullScreenRoute = location.pathname === '/tv' || location.pathname === '/setup';
+
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
   }
 
-  return (
-    <ToastProvider>
-      <Router>
-      {/* TV Display Route - Full Screen Only */}
+  // Full screen routes without navigation
+  if (isFullScreenRoute) {
+    return (
       <Routes>
         <Route 
           path="/tv" 
           element={<QueueDisplay queue={queue} />} 
         />
-        
-        {/* Setup Page - Home */}
         <Route 
           path="/setup" 
           element={<SetupPage />} 
         />
       </Routes>
+    );
+  }
 
-      {/* Main App Routes */}
-      <div className="flex flex-col h-screen bg-background">
-        {/* Top Navigation */}
-        <Sidebar 
-          onNavigate={() => {}} 
-          userRole={userRole!}
-          userName={userName}
-        />
+  // Main app routes with navigation
+  return (
+    <div className="flex flex-col h-screen bg-background pt-16">
+      {/* Top Navigation */}
+      <Sidebar 
+        onNavigate={() => {}} 
+        userRole={userRole!}
+        userName={userName}
+        onLogout={handleLogout}
+      />
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-auto w-full">
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <Dashboard 
-                  patients={patients}
-                  queue={queue}
-                  analyticsData={analyticsData}
-                />
-              } 
-            />
-            <Route 
-              path="/patients" 
-              element={
-                <PatientProfiles 
-                  patients={patients}
-                  addPatient={addPatient}
-                  updatePatient={updatePatient}
-                  deletePatient={deletePatient}
-                  addToQueue={addToQueue}
-                  userRole={userRole!}
-                />
-              } 
-            />
-            <Route 
-              path="/queue" 
-              element={
-                <QueueManagement 
-                  queue={queue}
-                  patients={patients}
-                  addToQueue={addToQueue}
-                  updateQueueStatus={updateQueueStatus}
-                  removeFromQueue={removeFromQueue}
-                  userRole={userRole!}
-                />
-              } 
-            />
-            <Route 
-              path="/analytics" 
-              element={<Analytics analyticsData={analyticsData} userRole={userRole!} />} 
-            />
-            <Route 
-              path="/files" 
-              element={
-                <FileManagement 
-                  patients={patients}
-                  userRole={userRole!}
-                />
-              } 
-            />
-            <Route path="/settings" element={<Settings userRole={userRole!} onLogout={handleLogout} />} />
-            <Route 
-              path="/staff" 
-              element={<StaffManagement userRole={userRole!} />} 
-            />
-            <Route 
-              path="/queue-display" 
-              element={<QueueDisplay queue={queue} />} 
-            />
-          </Routes>
-        </main>
-      </div>
-    </Router>
-    </ToastProvider>
+      {/* Main Content */}
+      <main className="flex-1 overflow-auto w-full lg:pl-20">
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <Dashboard 
+                patients={patients}
+                queue={queue}
+                analyticsData={analyticsData}
+                userRole={userRole}
+              />
+            } 
+          />
+          <Route 
+            path="/patients" 
+            element={
+              <PatientProfiles 
+                patients={patients}
+                addPatient={addPatient}
+                updatePatient={updatePatient}
+                deletePatient={deletePatient}
+                addToQueue={addToQueue}
+                userRole={userRole!}
+              />
+            } 
+          />
+          <Route 
+            path="/queue" 
+            element={
+              <QueueManagement 
+                queue={queue}
+                patients={patients}
+                addToQueue={addToQueue}
+                updateQueueStatus={updateQueueStatus}
+                removeFromQueue={removeFromQueue}
+                userRole={userRole!}
+              />
+            } 
+          />
+          <Route 
+            path="/analytics" 
+            element={<Analytics analyticsData={analyticsData} userRole={userRole!} />} 
+          />
+          <Route 
+            path="/files" 
+            element={
+              <FileManagement 
+                patients={patients}
+                userRole={userRole!}
+              />
+            } 
+          />
+          <Route path="/settings" element={<Settings userRole={userRole!} onLogout={handleLogout} />} />
+          <Route 
+            path="/staff" 
+            element={<StaffManagement userRole={userRole!} />} 
+          />
+          <Route 
+            path="/queue-display" 
+            element={<QueueDisplay queue={queue} />} 
+          />
+        </Routes>
+      </main>
+    </div>
   );
 };
 

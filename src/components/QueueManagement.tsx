@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { QueueItem, Patient } from '../types';
 import { Search, UserPlus, Play, Pause, CheckCircle, X, AlertTriangle, ArrowUp, ArrowDown } from 'lucide-react';
 import { getPermissions } from '../lib/permissions';
@@ -28,7 +29,8 @@ const QueueManagement: React.FC<QueueManagementProps> = ({
   const { t } = useTranslation();
   const permissions = getPermissions(userRole);
   const [selectedPatient, setSelectedPatient] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [patientSearchTerm, setPatientSearchTerm] = useState('');
+  const [queueSearchTerm, setQueueSearchTerm] = useState('');
   const [overrideModal, setOverrideModal] = useState<{ itemId: string; currentPriority: 'normal' | 'priority' } | null>(null);
   const [overrideJustification, setOverrideJustification] = useState('');
 
@@ -38,10 +40,22 @@ const QueueManagement: React.FC<QueueManagementProps> = ({
     return a.queueNumber - b.queueNumber;
   });
 
+  // Filter patients based on search term
+  const filteredPatients = patients.filter(patient => {
+    if (!patientSearchTerm) return true;
+    const searchLower = patientSearchTerm.toLowerCase();
+    return (
+      patient.firstName.toLowerCase().includes(searchLower) ||
+      patient.lastName.toLowerCase().includes(searchLower) ||
+      patient.phone.toLowerCase().includes(searchLower) ||
+      patient.email.toLowerCase().includes(searchLower)
+    );
+  });
+
   // Filter queue based on search term
   const filteredQueue = sortedQueue.filter(item => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
+    if (!queueSearchTerm) return true;
+    const searchLower = queueSearchTerm.toLowerCase();
     return (
       item.patientName.toLowerCase().includes(searchLower) ||
       item.queueNumber.toString().includes(searchLower) ||
@@ -101,10 +115,10 @@ const QueueManagement: React.FC<QueueManagementProps> = ({
 
   const getStatusColor = (status: QueueItem['status']) => {
     switch (status) {
-      case 'waiting': return 'bg-yellow-700';
-      case 'called': return 'bg-blue-500';
-      case 'serving': return 'bg-green-800';
-      case 'completed': return 'bg-gray-500';
+      case 'waiting': return 'bg-amber-500';
+      case 'called': return 'bg-blue-600';
+      case 'serving': return 'bg-green-600';
+      case 'completed': return 'bg-gray-600';
       default: return 'bg-gray-500';
     }
   };
@@ -148,100 +162,173 @@ const QueueManagement: React.FC<QueueManagementProps> = ({
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-foreground">{t.queueManagement}</h1>
-        <p className="text-muted-foreground">Manage patient queue and service status</p> <hr />
-      </div>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6 space-y-6">
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <p className="text-sm text-gray-600">Manage patient queue and service status</p>
+      </motion.div>
 
-      <div className="bg-card border border-border rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">{t.addToQueue}</h3>
-        <div className="flex flex-col md:flex-row gap-4">
-          <select value={selectedPatient}
-            onChange={(e) => setSelectedPatient(e.target.value)}
-            className="flex-1 px-4 py-2 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">{t.selectPatient}</option>
-            {patients.map((patient) => (
-              <option key={patient.id} value={patient.id}>
-                {patient.firstName} {patient.lastName} - {patient.phone}
-              </option>
-            ))}
-          </select>
-
-          <button
-            onClick={handleAddToQueue}
-            disabled={!selectedPatient}
-            className="flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed md:w-auto w-full"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>{t.addToQueue}</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-card border border-border rounded-lg p-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-          <h3 className="text-lg font-semibold text-foreground">{t.currentQueueTitle}</h3>
-          <div className="relative md:w-64 w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <motion.div 
+        className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.addToQueue}</h3>
+        <div className="space-y-3">
+          {/* Search Patients */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
               type="text"
-              placeholder={t.search + '...'}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Search patients by name, phone, or email..."
+              value={patientSearchTerm}
+              onChange={(e) => setPatientSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
+          {/* Patient Selection */}
+          <div className="flex flex-col md:flex-row gap-3">
+            <select
+              value={selectedPatient}
+              onChange={(e) => setSelectedPatient(e.target.value)}
+              className="flex-1 px-4 py-2.5 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+            >
+              <option value="">{t.selectPatient}</option>
+              {filteredPatients.length === 0 ? (
+                <option disabled>No patients found</option>
+              ) : (
+                filteredPatients.map((patient) => (
+                  <option key={patient.id} value={patient.id}>
+                    {patient.firstName} {patient.lastName} - {patient.phone}
+                  </option>
+                ))
+              )}
+            </select>
+
+            <motion.button
+              onClick={handleAddToQueue}
+              disabled={!selectedPatient}
+              className="flex items-center justify-center gap-2 bg-primary text-white px-6 py-2.5 rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed md:w-auto w-full text-sm font-medium shadow-sm"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>{t.addToQueue}</span>
+            </motion.button>
+          </div>
+
+          {/* Patient count indicator */}
+          {patientSearchTerm && (
+            <p className="text-xs text-gray-600">
+              {filteredPatients.length} patient{filteredPatients.length !== 1 ? 's' : ''} found
+            </p>
+          )}
+        </div>
+      </motion.div>
+
+      <motion.div 
+        className="bg-white border border-gray-200 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+      >
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">{t.currentQueueTitle}</h3>
+            <p className="text-sm text-gray-600 mt-0.5">{queue.length} patient{queue.length !== 1 ? 's' : ''} in queue</p>
+          </div>
+          <div className="relative md:w-80 w-full">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <input
+              type="text"
+              placeholder="Search by name, number, or status..."
+              value={queueSearchTerm}
+              onChange={(e) => setQueueSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
         </div>
-        <div className="space-y-3 overflow-y-auto max-h-96">
+        <div className="space-y-3 overflow-y-auto max-h-[500px]">
           {filteredQueue.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">
-              {searchTerm ? 'No patients found in queue' : 'No patients in queue'}
-            </p>
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                <Search className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-600 font-medium">
+                {queueSearchTerm ? 'No patients found in queue' : 'No patients in queue'}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                {queueSearchTerm ? 'Try a different search term' : 'Add patients to get started'}
+              </p>
+            </div>
           ) : (
-            filteredQueue.map((item) => (
-              <div
+            filteredQueue.map((item, index) => (
+              <motion.div
                 key={item.id}
-                className="flex items-center justify-between p-4 bg-accent rounded-lg"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: index * 0.03 }}
+                className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 bg-white rounded-lg border border-gray-200 hover:border-primary/30 hover:shadow-md transition-all"
               >
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-foreground">#{item.queueNumber}</span>
-                    {item.priority === 'priority' && (
-                      <AlertTriangle className="w-5 h-5 text-destructive" />
-                    )}
+                  {/* Queue Number Badge */}
+                  <div className={`flex items-center justify-center min-w-[64px] h-16 rounded-lg font-bold text-xl ${
+                    item.priority === 'priority'
+                      ? 'bg-amber-100 text-amber-700 border-2 border-amber-300'
+                      : 'bg-gray-100 text-gray-700 border-2 border-gray-300'
+                  }`}>
+                    <div className="text-center">
+                      <div className="text-xs font-medium opacity-70">#{item.queueNumber}</div>
+                      {item.priority === 'priority' && (
+                        <AlertTriangle className="w-4 h-4 mx-auto mt-0.5" />
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground">{item.patientName}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Added: {new Date(item.timestamp).toLocaleTimeString('en-US', { hour12: true })}
+
+                  {/* Patient Info */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-gray-900 text-base">{item.patientName}</p>
+                      {item.priority === 'priority' && (
+                        <span className="text-xs font-medium px-2 py-0.5 bg-amber-100 text-amber-700 rounded-md">
+                          Priority
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-0.5">
+                      Added {new Date(item.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <span className={`px-5 py-2 rounded-full text-white text-sm ${getStatusColor(item.status)}`}>
+                {/* Status and Actions */}
+                <div className="flex items-center gap-3 md:ml-auto">
+                  <span className={`px-4 py-2 rounded-md text-white text-xs font-semibold uppercase tracking-wide shadow-sm ${getStatusColor(item.status)}`}>
                     {getStatusText(item.status)}
                   </span>
                   
-                  <div className="flex gap-1">
+                  <div className="flex gap-2 flex-wrap">
                     {/* Priority Override Button (Doctor Only) */}
                     {permissions.canOverridePriority ? (
                       <Tooltip content={`Toggle priority: ${item.priority === 'priority' ? 'Remove priority' : 'Make priority'}`}>
                         <button
                           onClick={() => handlePriorityOverride(item.id, item.priority)}
-                          className={`p-3 rounded transition-colors ${
+                          className={`p-2 rounded-md transition-all shadow-sm ${
                             item.priority === 'priority'
-                              ? 'bg-yellow-500 text-white hover:bg-yellow-600'
+                              ? 'bg-amber-500 text-white hover:bg-amber-600 hover:shadow-md'
                               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
                           title="Override Priority"
                         >
                           {item.priority === 'priority' ? (
-                            <ArrowDown className="w-5 h-5" />
+                            <ArrowDown className="w-4 h-4" />
                           ) : (
-                            <ArrowUp className="w-5 h-5" />
+                            <ArrowUp className="w-4 h-4" />
                           )}
                         </button>
                       </Tooltip>
@@ -250,65 +337,65 @@ const QueueManagement: React.FC<QueueManagementProps> = ({
                     {item.status === 'waiting' && (
                       <button
                         onClick={() => updateQueueStatus(item.id, 'called')}
-                        className="p-3 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                        className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
                         title="Call Patient"
                       >
-                        <Play className="w-5 h-5" />
+                        <Play className="w-4 h-4" />
                       </button>
                     )}
                     
                     {item.status === 'called' && (
                       <button
                         onClick={() => updateQueueStatus(item.id, 'serving')}
-                        className="p-3 bg-green-800 text-white rounded hover:bg-green-600 transition-colors"
+                        className="p-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-all shadow-sm hover:shadow-md"
                         title="Start Serving"
                       >
-                        <Play className="w-5 h-5" />
+                        <Play className="w-4 h-4" />
                       </button>
                     )}
                     
                     {item.status === 'serving' && (
                       <button
                         onClick={() => updateQueueStatus(item.id, 'completed')}
-                        className="p-3 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                        className="p-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-all shadow-sm hover:shadow-md"
                         title="Complete Service"
                       >
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircle className="w-4 h-4" />
                       </button>
                     )}
                     
                     <button
                       onClick={() => removeFromQueue(item.id)}
-                      className="p-3 bg-red-800 text-destructive-foreground rounded hover:bg-destructive/90 transition-colors"
+                      className="p-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all shadow-sm hover:shadow-md"
                       title="Remove from Queue"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Priority Override Modal */}
       {overrideModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-card border border-border rounded-lg w-full max-w-md p-6">
-            <h3 className="text-xl font-bold text-foreground mb-4">Override Queue Priority</h3>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-xl w-full max-w-md p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Override Queue Priority</h3>
             <div className="space-y-4">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <p className="text-sm text-yellow-800">
+              <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+                <p className="text-sm text-amber-900">
                   <strong>Current:</strong> {overrideModal.currentPriority === 'priority' ? 'Priority Queue' : 'Normal Queue'}
                 </p>
-                <p className="text-sm text-yellow-800">
+                <p className="text-sm text-amber-900">
                   <strong>Change to:</strong> {overrideModal.currentPriority === 'priority' ? 'Normal Queue' : 'Priority Queue'}
                 </p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
+                <label className="block text-sm font-medium text-gray-900 mb-2">
                   Justification (required for audit trail)
                 </label>
                 <textarea
@@ -316,7 +403,7 @@ const QueueManagement: React.FC<QueueManagementProps> = ({
                   onChange={(e) => setOverrideJustification(e.target.value)}
                   placeholder="Explain why this priority change is necessary..."
                   rows={4}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-input text-foreground"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white text-gray-900"
                 />
               </div>
 
@@ -324,7 +411,7 @@ const QueueManagement: React.FC<QueueManagementProps> = ({
                 <button
                   onClick={confirmPriorityOverride}
                   disabled={!overrideJustification.trim()}
-                  className="flex-1 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-primary text-white px-4 py-2.5 rounded-md hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                 >
                   Confirm Override
                 </button>
@@ -333,7 +420,7 @@ const QueueManagement: React.FC<QueueManagementProps> = ({
                     setOverrideModal(null);
                     setOverrideJustification('');
                   }}
-                  className="flex-1 bg-secondary text-secondary-foreground px-4 py-2 rounded-lg hover:bg-secondary/80 transition-colors"
+                  className="flex-1 bg-gray-100 text-gray-700 px-4 py-2.5 rounded-md hover:bg-gray-200 transition-colors font-medium"
                 >
                   Cancel
                 </button>

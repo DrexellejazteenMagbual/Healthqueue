@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { UserPlus, Users as UsersIcon, Shield, Trash2, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from '../lib/translations';
@@ -205,10 +206,14 @@ const StaffManagement: React.FC<StaffManagementProps> = ({ userRole }) => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-start">
-        <div className="text-center flex-1">
-          <h1 className="text-3xl font-bold text-foreground">{t.staffManagement}</h1>
-          <p className="text-muted-foreground mt-1">{t.staffManagementDescription}</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex-1"
+        >
+          <p className="text-sm text-gray-600">{t.staffManagementDescription}</p>
+        </motion.div>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
           className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"

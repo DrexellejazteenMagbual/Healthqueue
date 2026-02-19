@@ -1,6 +1,7 @@
 import React from 'react';
 import { Patient } from '../types';
 import { User, AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface PatientCardProps {
   patient: Patient;
@@ -13,9 +14,14 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick }) => {
   const hasAllergies = patient.allergies.length > 0;
 
   return (
-    <div
+    <motion.div
       onClick={onClick}
       className="bg-card border border-border rounded-lg p-4 hover:shadow-lg hover:border-primary/50 transition-all cursor-pointer group"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ scale: 1.02, y: -4 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2 }}
     >
       {/* Avatar & Status */}
       <div className="flex items-start justify-between mb-3">
@@ -52,7 +58,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onClick }) => {
           </span>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 

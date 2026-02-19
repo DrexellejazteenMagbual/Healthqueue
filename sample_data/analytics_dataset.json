@@ -1,0 +1,264 @@
+{
+  "description": "Sample Analytics Dataset for Predictive Analysis",
+  "version": "1.0",
+  "generated_date": "2026-02-18",
+  "data_period": "90 days historical data",
+  
+  "illness_categories": [
+    {
+      "name": "Common Cold",
+      "probability_weight": 0.18,
+      "seasonal_factor": 1.3,
+      "trend": "increasing",
+      "description": "Viral upper respiratory infection"
+    },
+    {
+      "name": "Flu",
+      "probability_weight": 0.14,
+      "seasonal_factor": 1.8,
+      "trend": "increasing",
+      "description": "Influenza virus infection with seasonal peaks"
+    },
+    {
+      "name": "Hypertension",
+      "probability_weight": 0.13,
+      "seasonal_factor": 1.0,
+      "trend": "stable",
+      "description": "Chronic high blood pressure management"
+    },
+    {
+      "name": "Diabetes",
+      "probability_weight": 0.12,
+      "seasonal_factor": 1.0,
+      "trend": "stable",
+      "description": "Blood sugar monitoring and management"
+    },
+    {
+      "name": "Fever",
+      "probability_weight": 0.11,
+      "seasonal_factor": 1.2,
+      "trend": "increasing",
+      "description": "Elevated body temperature"
+    },
+    {
+      "name": "Cough and Colds",
+      "probability_weight": 0.09,
+      "seasonal_factor": 1.4,
+      "trend": "increasing",
+      "description": "Respiratory symptoms"
+    },
+    {
+      "name": "Headache",
+      "probability_weight": 0.07,
+      "seasonal_factor": 1.0,
+      "trend": "stable",
+      "description": "Various types of headaches and migraines"
+    },
+    {
+      "name": "Stomach Pain",
+      "probability_weight": 0.06,
+      "seasonal_factor": 0.8,
+      "trend": "decreasing",
+      "description": "Gastrointestinal discomfort"
+    },
+    {
+      "name": "Allergies",
+      "probability_weight": 0.05,
+      "seasonal_factor": 1.1,
+      "trend": "stable",
+      "description": "Allergic reactions and sensitivities"
+    },
+    {
+      "name": "Other",
+      "probability_weight": 0.05,
+      "seasonal_factor": 1.0,
+      "trend": "stable",
+      "description": "Miscellaneous conditions"
+    }
+  ],
+
+  "sample_patients": [
+    {
+      "id": "patient_001",
+      "name": "Maria Santos",
+      "age": 39,
+      "gender": "Female",
+      "medical_history": ["Hypertension"],
+      "blood_type": "O+",
+      "visit_frequency": "monthly"
+    },
+    {
+      "id": "patient_002",
+      "name": "Juan Dela Cruz",
+      "age": 34,
+      "gender": "Male",
+      "medical_history": ["Asthma"],
+      "blood_type": "A+",
+      "visit_frequency": "quarterly"
+    },
+    {
+      "id": "patient_003",
+      "name": "Rosa Garcia",
+      "age": 46,
+      "gender": "Female",
+      "medical_history": ["Diabetes Type 2"],
+      "blood_type": "B+",
+      "visit_frequency": "monthly"
+    },
+    {
+      "id": "patient_004",
+      "name": "Pedro Reyes",
+      "age": 29,
+      "gender": "Male",
+      "medical_history": [],
+      "blood_type": "AB+",
+      "visit_frequency": "occasional"
+    },
+    {
+      "id": "patient_005",
+      "name": "Ana Lopez",
+      "age": 36,
+      "gender": "Female",
+      "medical_history": ["Allergic Rhinitis"],
+      "blood_type": "O-",
+      "visit_frequency": "quarterly"
+    }
+  ],
+
+  "daily_volume_patterns": {
+    "weekday_average": 30,
+    "weekend_average": 15,
+    "peak_hours": ["9:00-11:00", "14:00-16:00"],
+    "seasonal_multipliers": {
+      "flu_season": 1.5,
+      "normal_season": 1.0,
+      "low_season": 0.7
+    }
+  },
+
+  "predictive_scenarios": [
+    {
+      "scenario": "Flu Season Peak",
+      "illness": "Flu",
+      "current_daily_average": 8,
+      "predicted_next_day": 10,
+      "predicted_next_week": 12,
+      "predicted_next_month": 15,
+      "confidence": 0.85,
+      "recommendation": "Increase flu vaccine availability and staff for diagnosis"
+    },
+    {
+      "scenario": "Hypertension Management Stable",
+      "illness": "Hypertension",
+      "current_daily_average": 5,
+      "predicted_next_day": 5,
+      "predicted_next_week": 5,
+      "predicted_next_month": 5,
+      "confidence": 0.92,
+      "recommendation": "Maintain current resource allocation"
+    },
+    {
+      "scenario": "Stomach Pain Declining",
+      "illness": "Stomach Pain",
+      "current_daily_average": 2,
+      "predicted_next_day": 1.5,
+      "predicted_next_week": 1,
+      "predicted_next_month": 0.5,
+      "confidence": 0.78,
+      "recommendation": "Monitor trends and consider reallocating resources"
+    },
+    {
+      "scenario": "Common Cold Surge",
+      "illness": "Common Cold",
+      "current_daily_average": 7,
+      "predicted_next_day": 9,
+      "predicted_next_week": 11,
+      "predicted_next_month": 13,
+      "confidence": 0.81,
+      "recommendation": "Stock up on cold medications and tissues"
+    }
+  ],
+
+  "historical_summary": {
+    "total_visits_90_days": 2430,
+    "average_daily_visits": 27,
+    "busiest_day": "Wednesday",
+    "peak_month": "February",
+    "most_common_illness": "Common Cold",
+    "fastest_growing_illness": "Flu",
+    "declining_illness": "Stomach Pain"
+  },
+
+  "resource_recommendations": {
+    "staffing": {
+      "weekday_doctors_needed": 3,
+      "weekday_nurses_needed": 5,
+      "weekend_doctors_needed": 2,
+      "weekend_nurses_needed": 3
+    },
+    "inventory": {
+      "high_demand_medicines": [
+        "Paracetamol",
+        "Antihistamines",
+        "Cough Syrup",
+        "Antibiotics",
+        "Antihypertensive"
+      ],
+      "seasonal_stock": [
+        "Flu Vaccines",
+        "Vitamin C",
+        "Throat Lozenges"
+      ]
+    }
+  },
+
+  "sample_visit_records": [
+    {
+      "date": "2026-02-18",
+      "patient_id": "patient_001",
+      "visit_type": "Hypertension",
+      "time": "09:30:00",
+      "queue_number": 5,
+      "wait_time_minutes": 15
+    },
+    {
+      "date": "2026-02-18",
+      "patient_id": "patient_002",
+      "visit_type": "Flu",
+      "time": "10:15:00",
+      "queue_number": 8,
+      "wait_time_minutes": 25
+    },
+    {
+      "date": "2026-02-17",
+      "patient_id": "patient_003",
+      "visit_type": "Diabetes",
+      "time": "14:00:00",
+      "queue_number": 12,
+      "wait_time_minutes": 20
+    },
+    {
+      "date": "2026-02-17",
+      "patient_id": "patient_004",
+      "visit_type": "Common Cold",
+      "time": "11:45:00",
+      "queue_number": 10,
+      "wait_time_minutes": 18
+    },
+    {
+      "date": "2026-02-16",
+      "patient_id": "patient_005",
+      "visit_type": "Allergies",
+      "time": "15:30:00",
+      "queue_number": 15,
+      "wait_time_minutes": 30
+    }
+  ],
+
+  "usage_instructions": {
+    "sql_import": "Use SAMPLE_ANALYTICS_DATA.sql for direct database import",
+    "api_import": "POST this JSON to your analytics API endpoint",
+    "testing": "Use this data structure for unit tests and integration tests",
+    "visualization": "Extract illness_categories and historical_summary for charts"
+  }
+}

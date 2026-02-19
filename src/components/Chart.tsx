@@ -40,32 +40,32 @@ const Chart: React.FC<ChartProps> = ({ type, data }) => {
       legend: {
         position: 'top' as const,
         labels: {
-          color: 'hsl(240, 3.8%, 46.1%)'
+          color: 'hsl(215, 15%, 45%)'
         }
       },
       tooltip: {
-        backgroundColor: 'hsl(240, 10%, 3.9%)',
-        titleColor: 'hsl(0, 0%, 98%)',
-        bodyColor: 'hsl(0, 0%, 98%)',
-        borderColor: 'hsl(240, 3.7%, 15.9%)',
+        backgroundColor: 'hsl(220, 18%, 16%)',
+        titleColor: 'hsl(210, 15%, 92%)',
+        bodyColor: 'hsl(210, 15%, 92%)',
+        borderColor: 'hsl(215, 15%, 24%)',
         borderWidth: 1
       }
     },
     scales: (type === 'line' || type === 'bar') ? {
       x: {
         ticks: {
-          color: 'hsl(240, 3.8%, 46.1%)'
+          color: 'hsl(215, 15%, 45%)'
         },
         grid: {
-          color: 'hsl(240, 5.9%, 90%)'
+          color: 'hsl(210, 20%, 88%)'
         }
       },
       y: {
         ticks: {
-          color: 'hsl(240, 3.8%, 46.1%)'
+          color: 'hsl(215, 15%, 45%)'
         },
         grid: {
-          color: 'hsl(240, 5.9%, 90%)'
+          color: 'hsl(210, 20%, 88%)'
         }
       }
     } : undefined
